@@ -6,6 +6,8 @@
 #define SCENEID_PREVDECISION 32767
 #define SCENEID_ENDGAME      -1
 
+#pragma pack(push, 1)
+
 struct _coord {
 	int16_t     x;
 	int16_t     y;
@@ -44,5 +46,7 @@ struct _gameBinFile {
 	_sceneDef   scenes[100];       // Scenes start at file position 0x0016
 	_pictureDef pictures[2000];    // Pictures start at file position 0x2596
 };
+
+#pragma pack(pop)
 
 #endif // PLUMBERS_GAMESTRUCT_HEADER
