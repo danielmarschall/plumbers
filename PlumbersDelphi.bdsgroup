@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <PersonalityInfo>
+    <Option>
+      <Option Name="Personality">Default.Personality</Option>
+      <Option Name="ProjectType"></Option>
+      <Option Name="Version">1.0</Option>
+      <Option Name="GUID">{30296230-5E30-4EE6-889A-1C56710848E0}</Option>
+    </Option>
+  </PersonalityInfo>
+  <Default.Personality>
+    
+    <Projects>
+      <Projects Name="Showtime32.exe">Win32_Player\Showtime32.bdsproj</Projects>
+      <Projects Name="BinEdit.exe">SceneEditor\BinEdit.bdsproj</Projects>
+      <Projects Name="Targets">Showtime32.exe BinEdit.exe</Projects>
+    </Projects>
+    <Dependencies/>
+  </Default.Personality>
+</BorlandProject>
