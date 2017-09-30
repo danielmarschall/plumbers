@@ -1,4 +1,4 @@
 [AutoRun]
 open=ShowTime32.exe
 icon=ShowTime32.exe,0
-action=Spielen
+action=Play game
