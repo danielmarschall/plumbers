@@ -1,6 +1,9 @@
 unit Unit1;
 
 // TODO: create for "unused files" box a small thumbnail, too?
+// TODO: sound interrupts when playing the dia show
+// TODO: aspect ratio
+// TODO: unused files: exclude *.db or *.pk
 
 interface
 
