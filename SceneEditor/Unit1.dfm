@@ -4,7 +4,7 @@ object Form1: TForm1
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'ShowTime Editor'
-  ClientHeight = 628
+  ClientHeight = 608
   ClientWidth = 1043
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object Form1: TForm1
   OnShow = FormShow
   DesignSize = (
     1043
-    628)
+    608)
   PixelsPerInch = 96
   TextHeight = 13
   object ListBox1: TListBox
@@ -57,7 +57,7 @@ object Form1: TForm1
   end
   object Button3: TButton
     Left = 8
-    Top = 574
+    Top = 554
     Width = 105
     Height = 46
     Anchors = [akLeft, akBottom]
@@ -85,7 +85,7 @@ object Form1: TForm1
   end
   object Button10: TButton
     Left = 112
-    Top = 574
+    Top = 554
     Width = 105
     Height = 46
     Anchors = [akLeft, akBottom]
@@ -97,7 +97,7 @@ object Form1: TForm1
     Left = 223
     Top = 8
     Width = 812
-    Height = 612
+    Height = 592
     ActivePage = TabSheet4
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 8
@@ -105,7 +105,7 @@ object Form1: TForm1
       Caption = 'Pictures'
       DesignSize = (
         804
-        584)
+        564)
       object Label1: TLabel
         Left = 16
         Top = 24
@@ -119,14 +119,6 @@ object Form1: TForm1
         Width = 79
         Height = 13
         Caption = 'Sound playback:'
-      end
-      object Image2: TImage
-        Left = 272
-        Top = 190
-        Width = 305
-        Height = 211
-        Stretch = True
-        OnMouseMove = Image1MouseMove
       end
       object Label12: TLabel
         Left = 272
@@ -441,6 +433,21 @@ object Form1: TForm1
         Visible = False
         OnClick = Button18Click
       end
+      object Panel2: TPanel
+        Left = 272
+        Top = 189
+        Width = 305
+        Height = 212
+        TabOrder = 16
+        object Image2: TImage
+          Left = 0
+          Top = 1
+          Width = 305
+          Height = 211
+          Stretch = True
+          OnMouseMove = Image1MouseMove
+        end
+      end
     end
     object TabSheet5: TTabSheet
       Caption = 'Decision'
@@ -451,18 +458,6 @@ object Form1: TForm1
         Width = 80
         Height = 13
         Caption = 'Decision-Picture:'
-      end
-      object Image1: TImage
-        Left = 12
-        Top = 255
-        Width = 409
-        Height = 290
-        Cursor = crCross
-        Stretch = True
-        OnMouseDown = Image1MouseDown
-        OnMouseEnter = Image1MouseEnter
-        OnMouseLeave = Image1MouseLeave
-        OnMouseMove = Image1MouseMove
       end
       object Label10: TLabel
         Left = 12
@@ -526,7 +521,6 @@ object Form1: TForm1
         TabOrder = 3
         object TabSheet1: TTabSheet
           Caption = 'Action 1 (Red)'
-          ExplicitWidth = 333
           object Label5: TLabel
             Left = 171
             Top = 72
@@ -616,7 +610,6 @@ object Form1: TForm1
         object TabSheet2: TTabSheet
           Caption = 'Action 2 (Green)'
           ImageIndex = 1
-          ExplicitWidth = 333
           object Label13: TLabel
             Left = 16
             Top = 16
@@ -706,7 +699,6 @@ object Form1: TForm1
         object TabSheet3: TTabSheet
           Caption = 'Action 3 (Blue)'
           ImageIndex = 2
-          ExplicitWidth = 333
           object Label7: TLabel
             Left = 16
             Top = 16
@@ -820,6 +812,25 @@ object Form1: TForm1
         TabOrder = 1
         Visible = False
         OnClick = Button11Click
+      end
+      object Panel1: TPanel
+        Left = 12
+        Top = 255
+        Width = 409
+        Height = 291
+        TabOrder = 4
+        object Image1: TImage
+          Left = 0
+          Top = 1
+          Width = 409
+          Height = 290
+          Cursor = crCross
+          Stretch = True
+          OnMouseDown = Image1MouseDown
+          OnMouseEnter = Image1MouseEnter
+          OnMouseLeave = Image1MouseLeave
+          OnMouseMove = Image1MouseMove
+        end
       end
     end
   end

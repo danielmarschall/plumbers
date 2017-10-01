@@ -1,9 +1,6 @@
 unit Unit1;
 
-// TODO: create for "unused files" box a small thumbnail, too?
-// TODO: sound interrupts when playing the dia show
-// TODO: aspect ratio
-// TODO: unused files: exclude *.db or *.pk
+// Idea: create a small thumbnail for "unused files", too?
 
 interface
 
@@ -13,7 +10,7 @@ uses
   Vcl.Menus;
 
 const
-  CUR_VER = '2017-08-09';
+  CUR_VER = '2017-10-02';
 
 type
   TForm1 = class(TForm)
@@ -116,6 +113,8 @@ type
     About1: TMenuItem;
     PopupMenu1: TPopupMenu;
     Addtoscene1: TMenuItem;
+    Panel1: TPanel;
+    Panel2: TPanel;
     procedure ListBox1Click(Sender: TObject);
     procedure Edit1Change(Sender: TObject);
     procedure Edit2Change(Sender: TObject);
@@ -188,6 +187,7 @@ type
     procedure DisableEnableSceneControls(enable: boolean);
     procedure DisableEnablePictureControls(enable: boolean);
     procedure DisableEnableFileControls(enable: boolean);
+    class procedure AspectRatio(image: TImage; panel: TControl);
   end;
 
 var
@@ -388,6 +388,9 @@ begin
   Button14.Enabled := enable;
 end;
 
+var
+  AutomaticNextDia: boolean;
+
 procedure TForm1.Button15Click(Sender: TObject);
 var
   decisionBMP: string;
@@ -397,7 +400,7 @@ var
 begin
   if PlayStart <> 0 then
   begin
-    if MediaplayerOpened then
+    if MediaplayerOpened and not AutomaticNextDia then
     begin
       if MediaPlayer1.Mode = mpPlaying then MediaPlayer1.Stop;
       Mediaplayer1.TimeFormat := tfMilliseconds;
@@ -407,6 +410,7 @@ begin
         MediaPlayer1.Play;
       end;
     end;
+    AutomaticNextDia := false;
     FirstTickCount := GetTickCount;
     PlayStart := GetTickCount - CurPictureTimepos * 100;
   end
@@ -475,6 +479,7 @@ begin
           if not Application.Terminated and (ListBox2.ItemIndex < ListBox2.Count-1) and not StopPlayRequest then
           begin
             ListBox2.ItemIndex := ListBox2.ItemIndex + 1;
+            AutomaticNextDia := true;
             ListBox2Click(ListBox2);
           end;
         end
@@ -486,6 +491,7 @@ begin
             if (CurScene^.szDecisionBmp <> '') and FileExists(decisionBMP) then
             begin
               Image2.Picture.LoadFromFile(decisionBMP);
+              AspectRatio(Image2, Panel2);
             end
             else
             begin
@@ -829,6 +835,34 @@ begin
   end;
 end;
 
+class procedure TForm1.AspectRatio(image: TImage; panel: TControl);
+var
+  wi, hi, ws, hs: integer;
+  ri, rs: double;
+begin
+  wi := image.Picture.Width;
+  hi := image.Picture.Height;
+  ri := wi / hi;
+
+  ws := panel.Width;
+  hs := panel.Height;
+  rs := ws / hs;
+
+  if rs > ri then
+  begin
+    image.Width  := Round(wi * hs/hi);
+    image.Height := hs;
+  end
+  else
+  begin
+    image.Width  := ws;
+    image.Height := Round(hi * ws/wi);
+  end;
+
+  image.Left := Round(panel.Width  / 2 - image.Width  / 2);
+  image.Top  := Round(panel.Height / 2 - image.Height / 2);
+end;
+
 procedure TForm1.ListBox2Click(Sender: TObject);
 var
   Filename: string;
@@ -838,9 +872,14 @@ begin
 
   Filename := string(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + CurPicture^.szBitmapFile);
   if FileExists(Filename) then
-    Image2.Picture.LoadFromFile(Filename) // TODO: keep aspect ratio
+  begin
+    Image2.Picture.LoadFromFile(Filename);
+    AspectRatio(Image2, Panel2);
+  end
   else
+  begin
     Image2.Picture := nil;
+  end;
 
   Label18.Caption := _DecisecondToTime(CurPictureTimepos);
 
@@ -961,33 +1000,44 @@ procedure TForm1.RecalcUnusedFiles;
 var
   i, idx: integer;
   SR: TSearchRec;
+  ext: string;
 begin
-  ListBox3.Clear;
+  ListBox3.Items.BeginUpdate;
+  try
+    ListBox3.Clear;
 
-  if FindFirst(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + '*.*', faArchive, SR) = 0 then
-  begin
-    repeat
-      ListBox3.Items.Add(SR.Name); //Fill the list
-    until FindNext(SR) <> 0;
-    FindClose(SR);
-  end;
+    if FindFirst(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + '*.*', faArchive, SR) = 0 then
+    begin
+      repeat
+        ext := UpperCase(ExtractFileExt(SR.Name));
+        if ((ext <> '.PK' {Adobe Audition}) and (ext <> '.DB' {Windows Thumbnail})) then
+        begin
+          ListBox3.Items.Add(SR.Name); //Fill the list
+        end;
+      until FindNext(SR) <> 0;
+      FindClose(SR);
+    end;
 
-  for i := CurScene^.pictureIndex to CurScene^.pictureIndex+CurScene^.numPics-1 do
-  begin
-    idx := ListBox3.Items.IndexOf(Game.pictures[i].szBitmapFile);
+    // Remove the entries which are present
+    for i := CurScene^.pictureIndex to CurScene^.pictureIndex+CurScene^.numPics-1 do
+    begin
+      idx := ListBox3.Items.IndexOf(Game.pictures[i].szBitmapFile);
+      if idx <> -1 then ListBox3.Items.Delete(idx);
+    end;
+
+    idx := ListBox3.Items.IndexOf(Edit1.Text);
     if idx <> -1 then ListBox3.Items.Delete(idx);
+    idx := ListBox3.Items.IndexOf('E'+Edit1.Text);
+    if idx <> -1 then ListBox3.Items.Delete(idx);
+
+    idx := ListBox3.Items.IndexOf(Edit2.Text);
+    if idx <> -1 then ListBox3.Items.Delete(idx);
+
+    idx := ListBox3.Items.IndexOf(Edit3.Text);
+    if idx <> -1 then ListBox3.Items.Delete(idx);
+  finally
+    ListBox3.Items.EndUpdate;
   end;
-
-  idx := ListBox3.Items.IndexOf(Edit1.Text);
-  if idx <> -1 then ListBox3.Items.Delete(idx);
-  idx := ListBox3.Items.IndexOf('E'+Edit1.Text);
-  if idx <> -1 then ListBox3.Items.Delete(idx);
-
-  idx := ListBox3.Items.IndexOf(Edit2.Text);
-  if idx <> -1 then ListBox3.Items.Delete(idx);
-
-  idx := ListBox3.Items.IndexOf(Edit3.Text);
-  if idx <> -1 then ListBox3.Items.Delete(idx);
 end;
 
 procedure TForm1.RecalcSoundtrackLength;
@@ -1213,10 +1263,10 @@ var
   Filename: string;
 begin
   FileName := string(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + Edit2.Text);
-  if FileExists(FileName) then
-    Image1.Picture.Bitmap.LoadFromFile(FileName) // TODO: keep aspect ratio
-  else
-    Image1.Picture := nil;
+  if not FileExists(FileName) then exit;
+
+  Image1.Picture.Bitmap.LoadFromFile(FileName);
+  AspectRatio(Image1, Panel1);
 
   Image1.Picture.Bitmap.PixelFormat := pf24bit; // Extend the palette, so we have red, green and blue guaranteed.
 
