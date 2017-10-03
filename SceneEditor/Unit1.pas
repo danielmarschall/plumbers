@@ -10,7 +10,7 @@ uses
   Vcl.Menus;
 
 const
-  CUR_VER = '2017-10-02';
+  CUR_VER = '2017-10-03';
 
 type
   TForm1 = class(TForm)

@@ -1,12 +1,12 @@
 object Form1: TForm1
   Left = 0
   Top = 0
-  BorderIcons = [biSystemMenu, biMinimize]
-  BorderStyle = bsSingle
   Caption = 'ShowTime Editor'
-  ClientHeight = 608
-  ClientWidth = 1043
+  ClientHeight = 619
+  ClientWidth = 1030
   Color = clBtnFace
+  Constraints.MinHeight = 677
+  Constraints.MinWidth = 1046
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -18,15 +18,16 @@ object Form1: TForm1
   OnCreate = FormCreate
   OnShow = FormShow
   DesignSize = (
-    1043
-    608)
+    1030
+    619)
   PixelsPerInch = 96
   TextHeight = 13
   object ListBox1: TListBox
     Left = 8
     Top = 8
     Width = 209
-    Height = 466
+    Height = 478
+    Anchors = [akLeft, akTop, akBottom]
     ItemHeight = 13
     Items.Strings = (
       'SC99'
@@ -36,76 +37,91 @@ object Form1: TForm1
     TabOrder = 0
     OnClick = ListBox1Click
     OnDblClick = ListBox1DblClick
+    ExplicitHeight = 466
   end
   object Button1: TButton
-    Left = 97
-    Top = 485
+    Left = 145
+    Top = 492
     Width = 33
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = '+'
     TabOrder = 3
     OnClick = Button1Click
+    ExplicitTop = 488
   end
   object Button2: TButton
-    Left = 136
-    Top = 485
+    Left = 184
+    Top = 492
     Width = 33
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = '-'
     TabOrder = 4
     OnClick = Button2Click
+    ExplicitTop = 488
   end
   object Button3: TButton
     Left = 8
-    Top = 554
+    Top = 565
     Width = 105
     Height = 46
     Anchors = [akLeft, akBottom]
     Caption = 'Save'
     TabOrder = 6
     OnClick = Button3Click
+    ExplicitTop = 534
   end
   object Button4: TButton
     Left = 8
-    Top = 485
+    Top = 492
     Width = 33
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = '^'
     TabOrder = 1
     OnClick = Button4Click
+    ExplicitTop = 488
   end
   object Button5: TButton
     Left = 47
-    Top = 485
+    Top = 492
     Width = 33
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = 'v'
     TabOrder = 2
     OnClick = Button5Click
+    ExplicitTop = 488
   end
   object Button10: TButton
     Left = 112
-    Top = 554
+    Top = 565
     Width = 105
     Height = 46
     Anchors = [akLeft, akBottom]
     Caption = 'Save + Test'
     TabOrder = 7
     OnClick = Button10Click
+    ExplicitTop = 534
   end
   object PageControl2: TPageControl
     Left = 223
     Top = 8
-    Width = 812
-    Height = 592
-    ActivePage = TabSheet4
+    Width = 799
+    Height = 603
+    ActivePage = TabSheet5
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 8
+    ExplicitWidth = 812
+    ExplicitHeight = 572
     object TabSheet4: TTabSheet
       Caption = 'Pictures'
+      ExplicitWidth = 804
+      ExplicitHeight = 544
       DesignSize = (
-        804
-        564)
+        791
+        575)
       object Label1: TLabel
         Left = 16
         Top = 24
@@ -150,7 +166,7 @@ object Form1: TForm1
       end
       object Label19: TLabel
         Left = 272
-        Top = 432
+        Top = 420
         Width = 62
         Height = 13
         Caption = 'Unused files:'
@@ -218,50 +234,60 @@ object Form1: TForm1
         OnChange = Edit1Change
       end
       object Button6: TButton
-        Left = 100
-        Top = 453
+        Left = 177
+        Top = 533
         Width = 33
         Height = 25
+        Anchors = [akLeft, akBottom]
         Caption = '+'
         TabOrder = 6
         OnClick = Button6Click
+        ExplicitTop = 517
       end
       object Button7: TButton
-        Left = 139
-        Top = 453
+        Left = 216
+        Top = 533
         Width = 33
         Height = 25
+        Anchors = [akLeft, akBottom]
         Caption = '-'
         TabOrder = 7
         OnClick = Button7Click
+        ExplicitTop = 517
       end
       object Button8: TButton
         Left = 11
-        Top = 453
+        Top = 533
         Width = 33
         Height = 25
+        Anchors = [akLeft, akBottom]
         Caption = '^'
         TabOrder = 4
         OnClick = Button8Click
+        ExplicitTop = 517
       end
       object Button9: TButton
         Left = 50
-        Top = 453
+        Top = 533
         Width = 33
         Height = 25
+        Anchors = [akLeft, akBottom]
         Caption = 'v'
         TabOrder = 5
         OnClick = Button9Click
+        ExplicitTop = 517
       end
       object ListBox2: TListBox
         Left = 10
         Top = 127
         Width = 239
-        Height = 306
+        Height = 400
+        Anchors = [akLeft, akTop, akBottom]
         ItemHeight = 13
         TabOrder = 3
         OnClick = ListBox2Click
         OnDblClick = ListBox2DblClick
+        ExplicitHeight = 396
       end
       object Edit3: TEdit
         Left = 368
@@ -283,11 +309,10 @@ object Form1: TForm1
         OnChange = SpinEdit13Change
       end
       object Button13: TButton
-        Left = 664
+        Left = 656
         Top = 19
         Width = 120
         Height = 25
-        Anchors = [akTop, akRight]
         Caption = 'Open scene folder'
         TabOrder = 12
         OnClick = Button13Click
@@ -392,9 +417,10 @@ object Form1: TForm1
       end
       object ListBox3: TListBox
         Left = 272
-        Top = 453
-        Width = 225
-        Height = 97
+        Top = 439
+        Width = 305
+        Height = 125
+        Anchors = [akLeft, akTop, akBottom]
         ItemHeight = 13
         PopupMenu = PopupMenu1
         TabOrder = 11
@@ -438,6 +464,7 @@ object Form1: TForm1
         Top = 189
         Width = 305
         Height = 212
+        BevelOuter = bvNone
         TabOrder = 16
         object Image2: TImage
           Left = 0
@@ -452,6 +479,8 @@ object Form1: TForm1
     object TabSheet5: TTabSheet
       Caption = 'Decision'
       ImageIndex = 1
+      ExplicitWidth = 804
+      ExplicitHeight = 573
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -818,6 +847,7 @@ object Form1: TForm1
         Top = 255
         Width = 409
         Height = 291
+        BevelOuter = bvNone
         TabOrder = 4
         object Image1: TImage
           Left = 0
@@ -836,12 +866,14 @@ object Form1: TForm1
   end
   object Button14: TButton
     Left = 8
-    Top = 529
+    Top = 534
     Width = 75
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = 'New'
     TabOrder = 5
     OnClick = Button14Click
+    ExplicitTop = 530
   end
   object Timer1: TTimer
     Enabled = False
@@ -887,7 +919,7 @@ object Form1: TForm1
     end
   end
   object PopupMenu1: TPopupMenu
-    Left = 763
+    Left = 739
     Top = 496
     object Addtoscene1: TMenuItem
       Caption = 'Add to scene'
