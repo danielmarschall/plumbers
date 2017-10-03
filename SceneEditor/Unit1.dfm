@@ -37,7 +37,6 @@ object Form1: TForm1
     TabOrder = 0
     OnClick = ListBox1Click
     OnDblClick = ListBox1DblClick
-    ExplicitHeight = 466
   end
   object Button1: TButton
     Left = 145
@@ -48,7 +47,6 @@ object Form1: TForm1
     Caption = '+'
     TabOrder = 3
     OnClick = Button1Click
-    ExplicitTop = 488
   end
   object Button2: TButton
     Left = 184
@@ -59,7 +57,6 @@ object Form1: TForm1
     Caption = '-'
     TabOrder = 4
     OnClick = Button2Click
-    ExplicitTop = 488
   end
   object Button3: TButton
     Left = 8
@@ -70,7 +67,6 @@ object Form1: TForm1
     Caption = 'Save'
     TabOrder = 6
     OnClick = Button3Click
-    ExplicitTop = 534
   end
   object Button4: TButton
     Left = 8
@@ -81,7 +77,6 @@ object Form1: TForm1
     Caption = '^'
     TabOrder = 1
     OnClick = Button4Click
-    ExplicitTop = 488
   end
   object Button5: TButton
     Left = 47
@@ -92,7 +87,6 @@ object Form1: TForm1
     Caption = 'v'
     TabOrder = 2
     OnClick = Button5Click
-    ExplicitTop = 488
   end
   object Button10: TButton
     Left = 112
@@ -103,22 +97,17 @@ object Form1: TForm1
     Caption = 'Save + Test'
     TabOrder = 7
     OnClick = Button10Click
-    ExplicitTop = 534
   end
   object PageControl2: TPageControl
     Left = 223
     Top = 8
     Width = 799
     Height = 603
-    ActivePage = TabSheet5
+    ActivePage = TabSheet4
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 8
-    ExplicitWidth = 812
-    ExplicitHeight = 572
     object TabSheet4: TTabSheet
       Caption = 'Pictures'
-      ExplicitWidth = 804
-      ExplicitHeight = 544
       DesignSize = (
         791
         575)
@@ -242,7 +231,6 @@ object Form1: TForm1
         Caption = '+'
         TabOrder = 6
         OnClick = Button6Click
-        ExplicitTop = 517
       end
       object Button7: TButton
         Left = 216
@@ -253,7 +241,6 @@ object Form1: TForm1
         Caption = '-'
         TabOrder = 7
         OnClick = Button7Click
-        ExplicitTop = 517
       end
       object Button8: TButton
         Left = 11
@@ -264,7 +251,6 @@ object Form1: TForm1
         Caption = '^'
         TabOrder = 4
         OnClick = Button8Click
-        ExplicitTop = 517
       end
       object Button9: TButton
         Left = 50
@@ -275,7 +261,6 @@ object Form1: TForm1
         Caption = 'v'
         TabOrder = 5
         OnClick = Button9Click
-        ExplicitTop = 517
       end
       object ListBox2: TListBox
         Left = 10
@@ -287,7 +272,6 @@ object Form1: TForm1
         TabOrder = 3
         OnClick = ListBox2Click
         OnDblClick = ListBox2DblClick
-        ExplicitHeight = 396
       end
       object Edit3: TEdit
         Left = 368
@@ -424,6 +408,7 @@ object Form1: TForm1
         ItemHeight = 13
         PopupMenu = PopupMenu1
         TabOrder = 11
+        OnClick = ListBox3Click
         OnDblClick = ListBox3DblClick
         OnMouseDown = ListBox3MouseDown
       end
@@ -472,15 +457,29 @@ object Form1: TForm1
           Width = 305
           Height = 211
           Stretch = True
-          OnMouseMove = Image1MouseMove
+          OnDblClick = Button12Click
+        end
+      end
+      object Panel3: TPanel
+        Left = 583
+        Top = 439
+        Width = 194
+        Height = 122
+        BevelOuter = bvNone
+        TabOrder = 17
+        object Image3: TImage
+          Left = 8
+          Top = 0
+          Width = 177
+          Height = 108
+          Stretch = True
+          OnDblClick = ListBox3DblClick
         end
       end
     end
     object TabSheet5: TTabSheet
       Caption = 'Decision'
       ImageIndex = 1
-      ExplicitWidth = 804
-      ExplicitHeight = 573
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -787,7 +786,7 @@ object Form1: TForm1
             Height = 22
             MaxValue = 0
             MinValue = 0
-            TabOrder = 3
+            TabOrder = 4
             Value = 0
             OnChange = ActionSpinEditsChange
           end
@@ -798,7 +797,7 @@ object Form1: TForm1
             Height = 22
             MaxValue = 0
             MinValue = 0
-            TabOrder = 4
+            TabOrder = 3
             Value = 0
             OnChange = ActionSpinEditsChange
           end
@@ -873,7 +872,6 @@ object Form1: TForm1
     Caption = 'New'
     TabOrder = 5
     OnClick = Button14Click
-    ExplicitTop = 530
   end
   object Timer1: TTimer
     Enabled = False

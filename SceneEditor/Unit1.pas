@@ -1,6 +1,14 @@
 unit Unit1;
 
-// Idea: create a small thumbnail for "unused files", too?
+// BUG: deleting of pictures does not work! the editor becomes very confused, and the changes are not saved at all?
+// TODO: when closing the editor: ask if the user wants to save (but only if they changed something)
+// TODO: the "folder open" icons look like you can CHOOSE a file, not open it!
+//       - change the icon to something else
+//       - add open-dialogs for choosing the bmp and wav files
+// Idea: When actions are deleted, remove the colorful marking on the picture?
+// Idea: unused liste auch bei decision page anzeigen
+// Idea: hotspots: netz ziehen anstelle linke und rechts maustaste. netz in jede beliebige richtung ziehen und topleft/bottomright automatisch bestimmen
+// Idea: decision bitmap markings: anti moiree?
 
 interface
 
@@ -115,6 +123,8 @@ type
     Addtoscene1: TMenuItem;
     Panel1: TPanel;
     Panel2: TPanel;
+    Panel3: TPanel;
+    Image3: TImage;
     procedure ListBox1Click(Sender: TObject);
     procedure Edit1Change(Sender: TObject);
     procedure Edit2Change(Sender: TObject);
@@ -160,12 +170,14 @@ type
     procedure Addtoscene1Click(Sender: TObject);
     procedure ListBox3MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure ListBox3Click(Sender: TObject);
   private
     Game: TGameBinFile;
     PlayStart: Cardinal;
     MediaplayerOpened: boolean;
     StopPlayRequest: boolean;
     FirstTickCount: Cardinal;
+    procedure ShowSceneBmp;
     function CurScene: PSceneDef;
     procedure LoadScene;
     procedure Load;
@@ -416,6 +428,7 @@ begin
   end
   else
   begin
+    TabSheet5.TabVisible := false;
     DisableEnablePictureControls(false);
     DisableEnableSceneControls(false);
     DisableEnableFileControls(false);
@@ -513,6 +526,7 @@ begin
       DisableEnableFileControls(true);
       DisableEnableSceneControls(true);
       DisableEnablePictureControls(true);
+      TabSheet5.TabVisible := true;
       Edit1.Enabled := true;
       SpinEdit1.Enabled := true;
       Edit3.Enabled := true;
@@ -520,6 +534,22 @@ begin
       Label18.Caption := _DecisecondToTime(CurPictureTimepos);
       ListBox2Click(ListBox2);
     end;
+  end;
+end;
+
+procedure TForm1.ShowSceneBmp;
+var
+  Filename: string;
+begin
+  Filename := string(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + CurPicture^.szBitmapFile);
+  if FileExists(Filename) then
+  begin
+    Image2.Picture.LoadFromFile(Filename);
+    AspectRatio(Image2, Panel2);
+  end
+  else
+  begin
+    Image2.Picture := nil;
   end;
 end;
 
@@ -691,6 +721,7 @@ begin
       ListBox2.ItemIndex := bakIdx;
       ListBox2Click(Listbox2);
     end;
+    RecalcUnusedFiles;
   end;
 end;
 
@@ -765,6 +796,7 @@ procedure TForm1.Edit2Change(Sender: TObject);
 begin
   _WriteStringToFilename(@CurScene^.szDecisionBmp, Edit2.Text);
   RecalcUnusedFiles;
+  RedrawDecisionBitmap;
   Label27.Visible := not FileExists(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + Edit2.Text) and not (Edit2.Text = '');
   Button11.Visible := CurScene^.szDecisionBmp <> '';
 end;
@@ -774,6 +806,7 @@ begin
   _WriteStringToFilename(@CurPicture^.szBitmapFile, Edit3.Text);
   ListBox2.Items[ListBox2.ItemIndex] := Format('(%d) %s', [CurPicture^.duration, CurPicture^.szBitmapFile]);
   RecalcUnusedFiles;
+  ShowSceneBmp;
   Label26.Visible := not FileExists(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + Edit3.Text);
   Button12.Visible := CurPicture^.szBitmapFile <> '';
 end;
@@ -864,22 +897,11 @@ begin
 end;
 
 procedure TForm1.ListBox2Click(Sender: TObject);
-var
-  Filename: string;
 begin
   SpinEdit13.Value := CurPicture^.duration;
   Edit3.Text := string(CurPicture^.szBitmapFile);
 
-  Filename := string(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + CurPicture^.szBitmapFile);
-  if FileExists(Filename) then
-  begin
-    Image2.Picture.LoadFromFile(Filename);
-    AspectRatio(Image2, Panel2);
-  end
-  else
-  begin
-    Image2.Picture := nil;
-  end;
+  ShowSceneBmp;
 
   Label18.Caption := _DecisecondToTime(CurPictureTimepos);
 
@@ -892,6 +914,18 @@ end;
 procedure TForm1.ListBox2DblClick(Sender: TObject);
 begin
   Button15Click(Button15);
+end;
+
+procedure TForm1.ListBox3Click(Sender: TObject);
+var
+  fileName: string;
+begin
+  if ListBox3.ItemIndex = -1 then exit;
+  fileName := IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + ListBox3.Items[ListBox3.ItemIndex];
+  Image3.Visible := FileExists(FileName);
+  if not FileExists(FileName) then exit;
+  Image3.Picture.LoadFromFile(Filename);
+  AspectRatio(Image3, Panel3);
 end;
 
 procedure TForm1.ListBox3DblClick(Sender: TObject);
@@ -1005,6 +1039,8 @@ begin
   ListBox3.Items.BeginUpdate;
   try
     ListBox3.Clear;
+
+    Image3.Visible := false;
 
     if FindFirst(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + '*.*', faArchive, SR) = 0 then
     begin
@@ -1231,7 +1267,7 @@ end;
 
 procedure TForm1.About1Click(Sender: TObject);
 begin
-  ShowMessage('Plumbers Dont''t Wear Ties - GAME.BIN editor (can be also used to create new games based on the "ShowTime" engine!)'+#13#10#13#10+'Written by Daniel Marschall (www.daniel-marschall.de)'+#13#10#13#10+'Published by ViaThinkSoft (www.viathinksoft.com).'+#13#10#13#10+'Current version: ' + CUR_VER);
+  ShowMessage('Plumbers Dont''t Wear Ties - GAME.BIN editor (can be also used to create new games based on the "ShowTime" engine!)'+#13#10#13#10+'Written by Daniel Marschall (www.daniel-marschall.de)'+#13#10#13#10+'Published by ViaThinkSoft (www.viathinksoft.com)'+#13#10#13#10+'Current version: ' + CUR_VER);
 end;
 
 procedure TForm1.ActionSpinEditsChange(Sender: TObject);
@@ -1263,6 +1299,9 @@ var
   Filename: string;
 begin
   FileName := string(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + Edit2.Text);
+
+  Image1.Visible := FileExists(FileName);
+
   if not FileExists(FileName) then exit;
 
   Image1.Picture.Bitmap.LoadFromFile(FileName);

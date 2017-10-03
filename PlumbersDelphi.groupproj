@@ -6,7 +6,7 @@
         <Projects Include="SceneEditor\BinEdit.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Win32_Player\Showtime32.dproj">
+        <Projects Include="Win32_Player\ShowTime32.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -26,23 +26,23 @@
     <Target Name="BinEdit:Make">
         <MSBuild Projects="SceneEditor\BinEdit.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Showtime32">
-        <MSBuild Projects="Win32_Player\Showtime32.dproj"/>
+    <Target Name="ShowTime32">
+        <MSBuild Projects="Win32_Player\ShowTime32.dproj"/>
     </Target>
-    <Target Name="Showtime32:Clean">
-        <MSBuild Projects="Win32_Player\Showtime32.dproj" Targets="Clean"/>
+    <Target Name="ShowTime32:Clean">
+        <MSBuild Projects="Win32_Player\ShowTime32.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Showtime32:Make">
-        <MSBuild Projects="Win32_Player\Showtime32.dproj" Targets="Make"/>
+    <Target Name="ShowTime32:Make">
+        <MSBuild Projects="Win32_Player\ShowTime32.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="BinEdit;Showtime32"/>
+        <CallTarget Targets="BinEdit;ShowTime32"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="BinEdit:Clean;Showtime32:Clean"/>
+        <CallTarget Targets="BinEdit:Clean;ShowTime32:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="BinEdit:Make;Showtime32:Make"/>
+        <CallTarget Targets="BinEdit:Make;ShowTime32:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

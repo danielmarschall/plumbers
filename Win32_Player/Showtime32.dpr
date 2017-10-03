@@ -1,4 +1,4 @@
-program Showtime32;
+program ShowTime32;
 
 uses
   Forms,

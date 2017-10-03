@@ -1,13 +1,22 @@
 unit Main;
 
-// TODO: When the windows is only resized a little bit (A few pixels), the window should not centered
-// Idea: Calc the width and height of ALL pictures, and then size the form to the biggest value?
-// BUG: if bitmap is not existing, then the error "ReadBitmapFile(): Unable to open bitmap file" appears. Not good.
 // BUG: If you drag the window, the dia show will stop playing, but the sound continues! This makes everything out of sync.
-// TODO: Ini Parameter if fullscreen is applied or not
-// TODO: Check out if hotspot coords should have their origin at the picture or the form position.
-// Idea: Savestates. Speedup. Pause.
-// Idea: Use Space bar to go to the next decision point.
+// TODO: When the windows is only resized a little bit (A few pixels), the window should not centered
+//       ... Calc the width and height of ALL pictures, and then size the form to the biggest value?
+//       ... or hard code the resolution in the INI file?
+// Idea: Ini Parameter if fullscreen is applied or not
+// Idea: Savestates, speedup, pause, Use Space bar to go to the next decision point.
+
+// -----------------------------------------------------------------------------
+
+// HOTSPOT_RELATIVE_ORIGIN is a new behavior which is not compatible with the original engine.
+// With HOTSPOT_RELATIVE_ORIGIN enabled, the coordinates will be relative to the picture
+// The original game has the origin at the top left corner of the screen.
+// This is a problem because the game as well as the scene editor does not know the
+// desired resolution, as it is automatically determined.
+// If we would hardcode the desired canvas (640x480) in <ExeName>.ini, then
+// it would work, but then, the scene Editor can not know the desired resolution...
+{$DEFINE HOTSPOT_RELATIVE_ORIGIN}
 
 interface
 
@@ -107,13 +116,13 @@ begin
     // Make form bigger if necessary
     if Image1.Width > ClientWidth then
     begin
-      ClientWidth := Image1.Width;
+      ClientWidth := Min(Image1.Width, Screen.Width);
       if (ClientWidth >= Screen.Width) then FullscreenMode := true;
       Position := poScreenCenter;
     end;
     if Image1.Height > ClientHeight then
     begin
-      ClientHeight := Image1.Height;
+      ClientHeight := Min(Image1.Height, Screen.Height);
       if (ClientHeight >= Screen.Height) then FullscreenMode := true;
       Position := poScreenCenter;
     end;
@@ -232,7 +241,7 @@ procedure TMainForm.ClickEvent(X, Y: Integer);
 var
   i: integer;
 begin
-  // TODO: if hotspots are overlaying; which hotspot will be prefered? the top ones? check out the original game.
+  // If hotspots are overlaying, the lowest action will be chosen (same behavior as original game)
   for i := Low(FHotspots) to High(FHotspots) do
   begin
     if Assigned(FHotspots[i].lpAction) and
@@ -249,7 +258,11 @@ end;
 
 procedure TMainForm.ControlClick(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
+  {$IFDEF HOTSPOT_RELATIVE_ORIGIN}
+  ClickEvent(X, Y);
+  {$ELSE}
   ClickEvent(X+TControl(Sender).Left, Y+TControl(Sender).Top);
+  {$ENDIF}
 end;
 
 procedure TMainForm.StartupTimerTimer(Sender: TObject);
