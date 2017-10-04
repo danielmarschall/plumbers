@@ -4,12 +4,13 @@ unit Unit1;
 //       - change the icon to something else
 //       - add open-dialogs for choosing the bmp and wav files
 // TODO: Give controls better names
-// Idea: When actions are deleted, remove the colorful marking on the picture?
-// Idea: decision bitmap markings: anti moiree?
+// TODO: When loading the file, check if dependencies are broken and output a warning
+// Idea: About the hotspot / action markings:
+//       - anti moiree?
+//       - allow user to draw a rectangle with drag'n'drop instead of left and right mouse button.
+//         also, automatically determine the left/top and right/bottom border, so the user can draw the rectange in every direction
 // Idea: unused liste auch bei decision page anzeigen
-// Idea: hotspots: netz ziehen anstelle linke und rechts maustaste. netz in jede beliebige richtung ziehen und topleft/bottomright automatisch bestimmen
-// Idea: Automatic correct wrong Game.numScenes/numPics values? (especially since we rely on them when adding a scene)
-// Idea: "defragmentation": shift all pictures to the left if a scene has a higher "numPics" value than actual pictures
+// Idea: Function to re-order stuff?
 
 interface
 
@@ -137,6 +138,9 @@ type
     Label31: TLabel;
     Label36: TLabel;
     Label37: TLabel;
+    CheckBox1: TCheckBox;
+    TabSheet8: TTabSheet;
+    Button20: TButton;
     procedure ListBox1Click(Sender: TObject);
     procedure Edit1Change(Sender: TObject);
     procedure Edit2Change(Sender: TObject);
@@ -185,6 +189,8 @@ type
     procedure ListBox3Click(Sender: TObject);
     procedure Button19Click(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure Button20Click(Sender: TObject);
+    procedure CheckBox1Click(Sender: TObject);
   private
     Game: TGameBinFile;
     GameBak: TGameBinFile;
@@ -610,8 +616,11 @@ end;
 
 procedure TForm1.Button19Click(Sender: TObject);
 begin
-  CopyMemory(@Game, @GameBak, SizeOf(Game));
-  SetupGUIAfterLoad;
+  if MessageDlg('Are you sure you want to discard all changes?', mtConfirmation, mbYesNoCancel, 0) = mrYes then
+  begin
+    CopyMemory(@Game, @GameBak, SizeOf(Game));
+    SetupGUIAfterLoad;
+  end;
 end;
 
 procedure TForm1.NewScene;
@@ -640,6 +649,12 @@ end;
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   NewScene;
+end;
+
+procedure TForm1.Button20Click(Sender: TObject);
+begin
+  Game.Defrag;
+  RecalcStats;
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
@@ -860,16 +875,16 @@ begin
   if not CompareMem(@Game, @GameBak, SizeOf(Game)) then
   begin
     case MessageDlg('Do you want to save the changes?', mtConfirmation, mbYesNoCancel, 0) of
-      ID_YES:
+      mrYes:
       begin
         Save;
         CanClose := true;
       end;
-      ID_NO:
+      mrNo:
       begin
         CanClose := true;
       end;
-      ID_CANCEL:
+      mrCancel:
       begin
         CanClose := false;
       end;
@@ -910,6 +925,11 @@ end;
 procedure TForm1.ListBox1DblClick(Sender: TObject);
 begin
   Button16Click(Button16);
+end;
+
+procedure TForm1.CheckBox1Click(Sender: TObject);
+begin
+  RedrawDecisionBitmap;
 end;
 
 procedure TForm1.Close1Click(Sender: TObject);
@@ -1069,6 +1089,13 @@ end;
 
 procedure TForm1.New;
 begin
+  PageControl1.ActivePageIndex := 0;
+  PageControl2.ActivePageIndex := 0;
+  PageControl3.ActivePageIndex := 0;
+  Label10.Caption := '';
+  Label21.Caption := '';
+  Label23.Caption := '';
+
   ZeroMemory(@Game, SizeOf(Game));
   ZeroMemory(@GameBak, SizeOf(Game));
 
@@ -1086,13 +1113,13 @@ begin
     FreeAndNil(fs);
   end;
 
+  CopyMemory(@GameBak, @Game, SizeOf(Game));
+
   if Game.RealPictureCount <> Game.numPics then
   begin
     MessageDlg('Picture count was wrong. Value was corrected.', mtInformation, [mbOk], 0);
     Game.numPics := Game.RealPictureCount;
   end;
-
-  CopyMemory(@GameBak, @Game, SizeOf(Game));
 
   SetupGUIAfterLoad;
 end;
@@ -1337,6 +1364,7 @@ begin
   // QUE: zero data of actions which are inactive (numActions<action)?
 
   RecalcStats;
+  RedrawDecisionBitmap;
 end;
 
 procedure TForm1.SpinEdit13Change(Sender: TObject);
@@ -1428,21 +1456,24 @@ begin
 
   Image1.Canvas.Brush.Style := bsDiagCross;
 
-  if (SpinEdit3.Value < SpinEdit4.Value) and (SpinEdit2.Value < SpinEdit5.Value) then
+  if (CheckBox1.Checked or (CurScene^.numActions >= 1)) and
+     (SpinEdit3.Value < SpinEdit4.Value) and (SpinEdit2.Value < SpinEdit5.Value) then
   begin
     Image1.Canvas.Pen.Color := clRed;
     Image1.Canvas.Brush.Color := clRed;
     Image1.Canvas.Rectangle(SpinEdit3.Value,  SpinEdit2.Value,  SpinEdit4.Value,  SpinEdit5.Value);
   end;
 
-  if (SpinEdit17.Value < SpinEdit19.Value) and (SpinEdit18.Value < SpinEdit20.Value) then
+  if (CheckBox1.Checked or (CurScene^.numActions >= 2)) and
+     (SpinEdit17.Value < SpinEdit19.Value) and (SpinEdit18.Value < SpinEdit20.Value) then
   begin
     Image1.Canvas.Pen.Color := clLime;
     Image1.Canvas.Brush.Color := clLime;
     Image1.Canvas.Rectangle(SpinEdit17.Value, SpinEdit18.Value, SpinEdit19.Value, SpinEdit20.Value);
   end;
 
-  if (SpinEdit7.Value < SpinEdit10.Value) and (SpinEdit8.Value < SpinEdit9.Value) then
+  if (CheckBox1.Checked or (CurScene^.numActions >= 3)) and
+     (SpinEdit7.Value < SpinEdit10.Value) and (SpinEdit8.Value < SpinEdit9.Value) then
   begin
     Image1.Canvas.Pen.Color := clBlue;
     Image1.Canvas.Brush.Color := clBlue;

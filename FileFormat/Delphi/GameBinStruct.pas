@@ -55,6 +55,9 @@ type
     scenes: array[0..99] of TSceneDef;        // Scenes start at 0x0016
     pictures: array[0..1999] of TPictureDef;  // Pictures start at 0x2596
 
+    class function MaxSceneCount: integer; static;
+    class function MaxPictureCount: integer; static;
+
     function AddSceneAtEnd(SceneID: integer): PSceneDef;
     procedure DeleteScene(SceneIndex: integer);
     procedure SwapScene(IndexA, IndexB: integer);
@@ -63,6 +66,8 @@ type
     function AddPictureBetween(Index: integer; assignToUpperScene: boolean=true): PPictureDef;
     function RealPictureCount: integer;
     function RealActionCount: integer;
+    function Defrag(OnlyCheck: boolean=false): boolean;
+    function BiggestUsedPictureIndex: integer;
   end;
 
 procedure _WriteStringToFilename(x: PAnsiFileName; s: AnsiString);
@@ -78,10 +83,23 @@ begin
   StrPLCopy(x^, s, Length(x^));
 end;
 
+function TGameBinFile.BiggestUsedPictureIndex: integer;
+var
+  iScene, candidate: integer;
+begin
+  result := -1;
+  for iScene := 0 to Self.numScenes - 1 do
+  begin
+    candidate := Self.scenes[iScene].pictureIndex + Self.scenes[iScene].numPics - 1;
+    if candidate > result then result := candidate;
+  end;
+end;
+
 function TGameBinFile.AddSceneAtEnd(SceneID: integer): PSceneDef;
 begin
-  if Self.numScenes >= Length(Self.scenes) then raise Exception.Create('No more space for another scene');
-  if sceneID >= Length(Self.scenes) then raise Exception.Create('SceneID is too large.');
+  if Self.numScenes >= Length(Self.scenes) then raise Exception.Create('Not enough space for another scene');
+  if SceneID < 0 then raise Exception.Create('Invalid scene ID');
+  if sceneID >= Length(Self.scenes) then raise Exception.Create('SceneID is too large.'); // TODO: I think this is not correct. This is the scene *ID*
   result := @Self.scenes[Self.numScenes];
   ZeroMemory(result, SizeOf(TSceneDef));
   _WriteStringToFilename(@result.szSceneFolder, AnsiString(Format('SC%.2d', [sceneID])));
@@ -97,6 +115,22 @@ begin
   end;
   ZeroMemory(@Self.scenes[Length(Self.scenes)-1], SizeOf(TSceneDef));
   Dec(Self.numScenes);
+end;
+
+class function TGameBinFile.MaxPictureCount: integer;
+var
+  dummy: TGameBinFile;
+begin
+  dummy.numScenes := 1; // avoid compiler give a warning
+  result := Length(dummy.pictures);
+end;
+
+class function TGameBinFile.MaxSceneCount: integer;
+var
+  dummy: TGameBinFile;
+begin
+  dummy.numScenes := 1; // avoid compiler give a warning
+  result := Length(dummy.scenes);
 end;
 
 function TGameBinFile.RealActionCount: integer;
@@ -132,6 +166,45 @@ begin
   CopyMemory(@Self.scenes[IndexB], @bakScene, SizeOf(TSceneDef));
 end;
 
+function TGameBinFile.Defrag(OnlyCheck: boolean=false): boolean;
+var
+  iPicture, iScene, iScene2: integer;
+  isGap: boolean;
+begin
+  result := false;
+  for iPicture := MaxPictureCount - 1 downto 0 do
+  begin
+    isGap := true;
+    for iScene := 0 to Self.numScenes - 1 do
+    begin
+      if (iPicture >= Self.scenes[iScene].pictureIndex) and
+         (iPicture <= Self.scenes[iScene].pictureIndex + Self.scenes[iScene].numPics - 1) then
+      begin
+        isGap := false;
+        break;
+      end;
+    end;
+    if isGap then
+    begin
+      result := true;
+      if not OnlyCheck then
+      begin
+        {$REGION 'Close the gap'}
+        for iScene2 := 0 to Self.numScenes - 1 do
+        begin
+          if (iPicture < Self.scenes[iScene2].pictureIndex) then
+          begin
+            Dec(Self.scenes[iScene2].pictureIndex);
+          end;
+        end;
+        CopyMemory(@Self.pictures[iPicture], @Self.pictures[iPicture+1], (Length(Self.pictures)-iPicture-1)*SizeOf(TPictureDef));
+        ZeroMemory(@Self.pictures[Length(Self.pictures)-1], SizeOf(TPictureDef));
+        {$ENDREGION}
+      end;
+    end;
+  end;
+end;
+
 procedure TGameBinFile.DeletePicture(PictureIndex: integer);
 var
   iScene, iScene2: integer;
@@ -164,11 +237,11 @@ begin
     end;
   end;
 
-  If (PictureIndex+protection < Length(Self.pictures)-1) and (protection = 0) then
+  If (PictureIndex < Length(Self.pictures)-1) and (protection = 0) then
   begin
-    CopyMemory(@Self.pictures[PictureIndex+protection], @Self.pictures[PictureIndex+protection+1], (Length(Self.pictures)-PictureIndex+protection-1)*SizeOf(TPictureDef));
+    CopyMemory(@Self.pictures[PictureIndex], @Self.pictures[PictureIndex+1], (Length(Self.pictures)-PictureIndex-1)*SizeOf(TPictureDef));
+    ZeroMemory(@Self.pictures[Length(Self.pictures)-1], SizeOf(TPictureDef));
   end;
-  ZeroMemory(@Self.pictures[Length(Self.pictures)-1], SizeOf(TPictureDef));
 
   Dec(Self.numPics);
 end;
@@ -207,8 +280,13 @@ function TGameBinFile.AddPictureBetween(Index: integer; assignToUpperScene: bool
 var
   iScene: integer;
 begin
-  if Self.numPics >= Length(Self.pictures) then raise Exception.Create('No more space for another picture');
   if ((Index < 0) or (Index >= Length(Self.pictures))) then raise Exception.Create('Invalid picture index');
+
+  if (BiggestUsedPictureIndex = MaxPictureCount-1) and Defrag(true) then
+    raise Exception.Create('Not enough space for another picture. Please defrag to fill the gaps first.');
+
+  if Self.numPics >= MaxPictureCount then
+    raise Exception.Create('Not enough space for another picture. Maximum limit reached.');
 
   if assignToUpperScene then
   begin

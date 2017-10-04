@@ -454,8 +454,6 @@ object Form1: TForm1
         TabOrder = 17
         object TabSheet6: TTabSheet
           Caption = 'Scene length'
-          ExplicitWidth = 281
-          ExplicitHeight = 165
           object Label20: TLabel
             Left = 16
             Top = 15
@@ -488,8 +486,6 @@ object Form1: TForm1
         object TabSheet7: TTabSheet
           Caption = 'Stats'
           ImageIndex = 1
-          ExplicitWidth = 281
-          ExplicitHeight = 165
           object Label34: TLabel
             Left = 16
             Top = 16
@@ -547,11 +543,27 @@ object Form1: TForm1
             Caption = '---'
           end
         end
+        object TabSheet8: TTabSheet
+          Caption = 'Misc'
+          ImageIndex = 2
+          object Button20: TButton
+            Left = 11
+            Top = 19
+            Width = 75
+            Height = 25
+            Caption = 'Defrag'
+            TabOrder = 0
+            OnClick = Button20Click
+          end
+        end
       end
     end
     object TabSheet5: TTabSheet
       Caption = 'Decision'
       ImageIndex = 1
+      DesignSize = (
+        791
+        575)
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -617,7 +629,7 @@ object Form1: TForm1
         Top = 64
         Width = 365
         Height = 185
-        ActivePage = TabSheet3
+        ActivePage = TabSheet1
         TabOrder = 3
         object TabSheet1: TTabSheet
           Caption = 'Action 1 (Red)'
@@ -925,7 +937,7 @@ object Form1: TForm1
         Width = 409
         Height = 291
         BevelOuter = bvNone
-        TabOrder = 4
+        TabOrder = 5
         object Image1: TImage
           Left = 0
           Top = 1
@@ -938,6 +950,16 @@ object Form1: TForm1
           OnMouseLeave = Image1MouseLeave
           OnMouseMove = Image1MouseMove
         end
+      end
+      object CheckBox1: TCheckBox
+        Left = 651
+        Top = 547
+        Width = 137
+        Height = 17
+        Anchors = [akRight, akBottom]
+        Caption = 'Show disabled hotspots'
+        TabOrder = 4
+        OnClick = CheckBox1Click
       end
     end
   end
@@ -952,11 +974,11 @@ object Form1: TForm1
     OnClick = Button14Click
   end
   object Button19: TButton
-    Left = 136
+    Left = 119
     Top = 534
-    Width = 81
+    Width = 98
     Height = 25
-    Caption = 'Undo all'
+    Caption = 'Discard changes'
     TabOrder = 6
     OnClick = Button19Click
   end
