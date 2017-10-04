@@ -1,24 +1,25 @@
 unit Unit1;
 
-// BUG: deleting of pictures does not work! the editor becomes very confused, and the changes are not saved at all?
-// TODO: when closing the editor: ask if the user wants to save (but only if they changed something)
 // TODO: the "folder open" icons look like you can CHOOSE a file, not open it!
 //       - change the icon to something else
 //       - add open-dialogs for choosing the bmp and wav files
+// TODO: Give controls better names
 // Idea: When actions are deleted, remove the colorful marking on the picture?
+// Idea: decision bitmap markings: anti moiree?
 // Idea: unused liste auch bei decision page anzeigen
 // Idea: hotspots: netz ziehen anstelle linke und rechts maustaste. netz in jede beliebige richtung ziehen und topleft/bottomright automatisch bestimmen
-// Idea: decision bitmap markings: anti moiree?
+// Idea: Automatic correct wrong Game.numScenes/numPics values? (especially since we rely on them when adding a scene)
+// Idea: "defragmentation": shift all pictures to the left if a scene has a higher "numPics" value than actual pictures
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Spin, Grids, GameBinStruct, ComCtrls, ExtCtrls, Vcl.MPlayer,
-  Vcl.Menus;
+  Dialogs, StdCtrls, Spin, Grids, GameBinStruct, ComCtrls, ExtCtrls, MPlayer,
+  Menus;
 
 const
-  CUR_VER = '2017-10-03';
+  CUR_VER = '2017-10-04';
 
 type
   TForm1 = class(TForm)
@@ -87,11 +88,6 @@ type
     Button14: TButton;
     MediaPlayer1: TMediaPlayer;
     Timer1: TTimer;
-    GroupBox1: TGroupBox;
-    Label20: TLabel;
-    Label21: TLabel;
-    Label22: TLabel;
-    Label23: TLabel;
     GroupBox2: TGroupBox;
     Button15: TButton;
     Button17: TButton;
@@ -125,6 +121,22 @@ type
     Panel2: TPanel;
     Panel3: TPanel;
     Image3: TImage;
+    Button19: TButton;
+    PageControl3: TPageControl;
+    TabSheet6: TTabSheet;
+    TabSheet7: TTabSheet;
+    Label20: TLabel;
+    Label21: TLabel;
+    Label22: TLabel;
+    Label23: TLabel;
+    Label34: TLabel;
+    Label35: TLabel;
+    Label32: TLabel;
+    Label33: TLabel;
+    Label30: TLabel;
+    Label31: TLabel;
+    Label36: TLabel;
+    Label37: TLabel;
     procedure ListBox1Click(Sender: TObject);
     procedure Edit1Change(Sender: TObject);
     procedure Edit2Change(Sender: TObject);
@@ -171,8 +183,11 @@ type
     procedure ListBox3MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure ListBox3Click(Sender: TObject);
+    procedure Button19Click(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
     Game: TGameBinFile;
+    GameBak: TGameBinFile;
     PlayStart: Cardinal;
     MediaplayerOpened: boolean;
     StopPlayRequest: boolean;
@@ -195,6 +210,7 @@ type
     procedure RecalcSlideshowLength;
     procedure RecalcSoundtrackLength;
     procedure RecalcUnusedFiles;
+    procedure RecalcStats;
     procedure HandlePossibleEmptySceneList;
     procedure DisableEnableSceneControls(enable: boolean);
     procedure DisableEnablePictureControls(enable: boolean);
@@ -212,6 +228,10 @@ implementation
 uses
   Math, MMSystem, ShellAPI;
 
+const
+  DEFAULT_DURATION = 0;
+  DEFAULT_FILENAME = 'DUMMY.BMP';
+
 function GetSceneIDFromName(sceneName: string): Integer;
 var
   sSceneID: string;
@@ -219,6 +239,16 @@ begin
   if Copy(sceneName, 1, 2) <> 'SC' then raise Exception.Create('Scene name invalid');
   sSceneID := Copy(sceneName, 3, 2);
   if not TryStrToInt(sSceneID, result) then raise Exception.Create('Scene name invalid');
+end;
+
+procedure SelectFilenameBase(Edit: TEdit);
+begin
+  if Edit.CanFocus then
+  begin
+    Edit.SetFocus;
+    Edit.SelStart := 0;
+    Edit.SelLength := Pos('.', Edit.Text)-1;
+  end;
 end;
 
 function _DecisecondToTime(ds: integer): string;
@@ -323,7 +353,7 @@ end;
 procedure TForm1.Button10Click(Sender: TObject);
 begin
   Save;
-  if not FileExists('ShowTime32.exe') then raise Exception.Create('ShowTime32.exe not found.');
+  if not FileExists('ShowTime32.exe') then raise Exception.Create('GAME.BIN saved; ShowTime32.exe not found.');
   ShellExecute(Application.Handle, 'open', 'ShowTime32.exe', '', '', SW_NORMAL);
 end;
 
@@ -373,7 +403,6 @@ end;
 procedure TForm1.Button14Click(Sender: TObject);
 begin
   New;
-  HandlePossibleEmptySceneList;
 end;
 
 procedure TForm1.DisableEnableSceneControls(enable: boolean);
@@ -579,6 +608,12 @@ begin
   ShellExecute(Application.Handle, 'open', PChar(fileName), '', '', SW_NORMAL);
 end;
 
+procedure TForm1.Button19Click(Sender: TObject);
+begin
+  CopyMemory(@Game, @GameBak, SizeOf(Game));
+  SetupGUIAfterLoad;
+end;
+
 procedure TForm1.NewScene;
 var
   sceneID: integer;
@@ -594,6 +629,7 @@ begin
 
   newScene := Game.AddSceneAtEnd(sceneID);
   newScene.actions[0].nextSceneID := SCENEID_ENDGAME;
+  newScene.pictureIndex := Game.numPics;
   ListBox1.Items.Add(newScene.szSceneFolder);
   ReloadActionSceneLists;
   HandlePossibleEmptySceneList;
@@ -652,7 +688,6 @@ begin
   end;
 
   Game.DeleteScene(ListBox1.ItemIndex);
-  Dec(Game.numScenes);
 
   bakItemindex := ListBox1.ItemIndex;
   ListBox1.Items.Delete(bakItemindex);
@@ -691,19 +726,25 @@ procedure TForm1.Button6Click(Sender: TObject);
 var
   pic: PPictureDef;
 begin
-  pic := Game.AddPictureBetween(CurScene^.pictureIndex + Max(ListBox2.ItemIndex,0));
-  pic.duration := 0;
-  pic.szBitmapFile := 'DUMMY.BMP';
-  ListBox2.Items.Insert(ListBox2.ItemIndex, '(0) DUMMY.BMP');
+  if ListBox2.Items.Count > 0 then
+    pic := Game.AddPictureBetween(CurScene^.pictureIndex + Max(ListBox2.ItemIndex+1,0), false)
+  else
+    pic := Game.AddPictureBetween(CurScene^.pictureIndex + Max(ListBox2.ItemIndex,0), true);
+  pic.duration     := DEFAULT_DURATION;
+  pic.szBitmapFile := DEFAULT_FILENAME;
   if ListBox2.ItemIndex = -1 then
   begin
+    ListBox2.Items.Insert(ListBox2.Count, Format('(%d) %s', [DEFAULT_DURATION, DEFAULT_FILENAME]));
     ListBox2.ItemIndex := ListBox2.Count - 1;
   end
   else
   begin
-    ListBox2.ItemIndex := ListBox2.ItemIndex - 1;
+    ListBox2.Items.Insert(ListBox2.ItemIndex+1, Format('(%d) %s', [DEFAULT_DURATION, DEFAULT_FILENAME]));
+    ListBox2.ItemIndex := ListBox2.ItemIndex + 1;
   end;
   ListBox2Click(Listbox2);
+  SelectFilenameBase(Edit3);
+  RecalcStats;
 end;
 
 procedure TForm1.Button7Click(Sender: TObject);
@@ -713,7 +754,7 @@ begin
   if Listbox2.Count > 0 then
   begin
     bakIdx := ListBox2.ItemIndex;
-    Game.DeletePicture(bakIdx);
+    Game.DeletePicture(CurScene^.pictureIndex + bakIdx);
     ListBox2.Items.Delete(bakIdx);
     if ListBox2.Count > 0 then
     begin
@@ -723,6 +764,7 @@ begin
     end;
     RecalcUnusedFiles;
   end;
+  RecalcStats;
 end;
 
 procedure TForm1.Button8Click(Sender: TObject);
@@ -743,6 +785,8 @@ procedure TForm1.Save;
 var
   fs: TFileStream;
 begin
+  CopyMemory(@GameBak, @Game, SizeOf(Game));
+
   fs := TFileStream.Create('GAME.BIN', fmOpenWrite or fmCreate);
   try
     fs.WriteBuffer(Game, SizeOf(Game));
@@ -811,10 +855,33 @@ begin
   Button12.Visible := CurPicture^.szBitmapFile <> '';
 end;
 
+procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  if not CompareMem(@Game, @GameBak, SizeOf(Game)) then
+  begin
+    case MessageDlg('Do you want to save the changes?', mtConfirmation, mbYesNoCancel, 0) of
+      ID_YES:
+      begin
+        Save;
+        CanClose := true;
+      end;
+      ID_NO:
+      begin
+        CanClose := true;
+      end;
+      ID_CANCEL:
+      begin
+        CanClose := false;
+      end;
+    end;
+  end;
+end;
+
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   PageControl1.ActivePageIndex := 0;
   PageControl2.ActivePageIndex := 0;
+  PageControl3.ActivePageIndex := 0;
   Label10.Caption := '';
   Label21.Caption := '';
   Label23.Caption := '';
@@ -897,7 +964,26 @@ begin
 end;
 
 procedure TForm1.ListBox2Click(Sender: TObject);
+var
+  bakEvent: TNotifyEvent;
 begin
+  if CurScene^.numPics = 0 then
+  begin
+    SpinEdit13.Value := 0;
+
+    bakEvent := Edit3.OnChange;
+    try
+      Edit3.OnChange := nil;
+      Edit3.Text := '';
+    finally
+      Edit3.OnChange := bakEvent;
+    end;
+
+    Label18.Caption := '';
+    Image2.Picture := nil;
+    exit;
+  end;
+  
   SpinEdit13.Value := CurPicture^.duration;
   Edit3.Text := string(CurPicture^.szBitmapFile);
 
@@ -909,6 +995,8 @@ begin
   begin
     Button15Click(Button15);
   end;
+
+  RecalcStats;
 end;
 
 procedure TForm1.ListBox2DblClick(Sender: TObject);
@@ -982,6 +1070,7 @@ end;
 procedure TForm1.New;
 begin
   ZeroMemory(@Game, SizeOf(Game));
+  ZeroMemory(@GameBak, SizeOf(Game));
 
   SetupGUIAfterLoad;
 end;
@@ -996,6 +1085,14 @@ begin
   finally
     FreeAndNil(fs);
   end;
+
+  if Game.RealPictureCount <> Game.numPics then
+  begin
+    MessageDlg('Picture count was wrong. Value was corrected.', mtInformation, [mbOk], 0);
+    Game.numPics := Game.RealPictureCount;
+  end;
+
+  CopyMemory(@GameBak, @Game, SizeOf(Game));
 
   SetupGUIAfterLoad;
 end;
@@ -1118,15 +1215,17 @@ procedure TForm1.LoadScene;
   procedure _PreparePictureList;
   var
     i: integer;
-    pic: PPictureDef;
+    //pic: PPictureDef;
   begin
     ListBox2.Clear;
 
     if CurScene^.numPics = 0 then
     begin
+      (*
       pic := Game.AddPictureBetween(CurScene^.pictureIndex + Max(ListBox2.ItemIndex,0));
-      pic.duration := 0;
-      pic.szBitmapFile := 'DUMMY.BMP';
+      pic.duration := DEFAULT_DURATION;
+      pic.szBitmapFile := DEFAULT_FILENAME;
+      *)
     end;
 
     for i := CurScene^.pictureIndex to CurScene^.pictureIndex + CurScene^.numPics - 1 do
@@ -1174,6 +1273,22 @@ begin
   RecalcSoundtrackLength;
 
   RecalcUnusedFiles;
+
+  RecalcStats;
+end;
+
+procedure TForm1.RecalcStats;
+begin
+  Label35.Caption := IntToStr(ListBox1.ItemIndex) + ' / ' + IntToStr(Game.numScenes);
+
+  if ListBox2.ItemIndex >= 0 then
+    Label31.Caption := IntToStr(CurScene^.pictureIndex) + ' + ' + IntToStr(ListBox2.ItemIndex) + ' = ' + IntToStr(CurScene^.pictureIndex+ListBox2.ItemIndex)
+  else
+    Label31.Caption := IntToStr(CurScene^.pictureIndex);
+
+  Label33.Caption := IntToStr(CurScene^.numPics) + ' / ' + IntToStr(Game.numPics);
+
+  Label37.Caption := IntToStr(CurScene^.numActions) + ' / ' + IntToStr(Game.RealActionCount);
 end;
 
 procedure TForm1.ReloadActionSceneLists;
@@ -1220,6 +1335,8 @@ begin
   CurScene^.numActions := SpinEdit12.Value;
 
   // QUE: zero data of actions which are inactive (numActions<action)?
+
+  RecalcStats;
 end;
 
 procedure TForm1.SpinEdit13Change(Sender: TObject);
@@ -1267,7 +1384,7 @@ end;
 
 procedure TForm1.About1Click(Sender: TObject);
 begin
-  ShowMessage('Plumbers Dont''t Wear Ties - GAME.BIN editor (can be also used to create new games based on the "ShowTime" engine!)'+#13#10#13#10+'Written by Daniel Marschall (www.daniel-marschall.de)'+#13#10#13#10+'Published by ViaThinkSoft (www.viathinksoft.com)'+#13#10#13#10+'Current version: ' + CUR_VER);
+  ShowMessage('Plumbers Don''t Wear Ties - GAME.BIN editor (can be also used to create new games based on the "ShowTime" engine!)'+#13#10#13#10+'Written by Daniel Marschall (www.daniel-marschall.de)'+#13#10#13#10+'Published by ViaThinkSoft (www.viathinksoft.com)'+#13#10#13#10+'Current version: ' + CUR_VER);
 end;
 
 procedure TForm1.ActionSpinEditsChange(Sender: TObject);

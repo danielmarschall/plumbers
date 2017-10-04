@@ -15,6 +15,7 @@ object Form1: TForm1
   Menu = MainMenu1
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnShow = FormShow
   DesignSize = (
@@ -65,7 +66,7 @@ object Form1: TForm1
     Height = 46
     Anchors = [akLeft, akBottom]
     Caption = 'Save'
-    TabOrder = 6
+    TabOrder = 7
     OnClick = Button3Click
   end
   object Button4: TButton
@@ -95,7 +96,7 @@ object Form1: TForm1
     Height = 46
     Anchors = [akLeft, akBottom]
     Caption = 'Save + Test'
-    TabOrder = 7
+    TabOrder = 8
     OnClick = Button10Click
   end
   object PageControl2: TPageControl
@@ -105,7 +106,7 @@ object Form1: TForm1
     Height = 603
     ActivePage = TabSheet4
     Anchors = [akLeft, akTop, akRight, akBottom]
-    TabOrder = 8
+    TabOrder = 9
     object TabSheet4: TTabSheet
       Caption = 'Pictures'
       DesignSize = (
@@ -302,56 +303,18 @@ object Form1: TForm1
         OnClick = Button13Click
       end
       object MediaPlayer1: TMediaPlayer
-        Left = 684
-        Top = 371
+        Left = 604
+        Top = 21
         Width = 29
-        Height = 30
+        Height = 25
         ColoredButtons = []
         VisibleButtons = [btPlay]
-        DoubleBuffered = True
         Visible = False
-        ParentDoubleBuffered = False
         TabOrder = 14
-      end
-      object GroupBox1: TGroupBox
-        Left = 591
-        Top = 63
-        Width = 185
-        Height = 121
-        Caption = 'Scene length'
-        TabOrder = 15
-        object Label20: TLabel
-          Left = 16
-          Top = 24
-          Width = 119
-          Height = 13
-          Caption = 'Picture sequence length:'
-        end
-        object Label21: TLabel
-          Left = 16
-          Top = 43
-          Width = 37
-          Height = 13
-          Caption = 'Label21'
-        end
-        object Label22: TLabel
-          Left = 16
-          Top = 72
-          Width = 91
-          Height = 13
-          Caption = 'Soundtrack length:'
-        end
-        object Label23: TLabel
-          Left = 16
-          Top = 91
-          Width = 37
-          Height = 13
-          Caption = 'Label23'
-        end
       end
       object GroupBox2: TGroupBox
         Left = 591
-        Top = 190
+        Top = 234
         Width = 185
         Height = 167
         Caption = 'Playback'
@@ -403,7 +366,7 @@ object Form1: TForm1
         Left = 272
         Top = 439
         Width = 305
-        Height = 125
+        Height = 122
         Anchors = [akLeft, akTop, akBottom]
         ItemHeight = 13
         PopupMenu = PopupMenu1
@@ -417,6 +380,7 @@ object Form1: TForm1
         Top = 143
         Width = 26
         Height = 21
+        Hint = 'Open file'
         Caption = '1'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -424,6 +388,8 @@ object Form1: TForm1
         Font.Name = 'Wingdings'
         Font.Style = []
         ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 10
         Visible = False
         OnClick = Button12Click
@@ -433,6 +399,7 @@ object Form1: TForm1
         Top = 60
         Width = 31
         Height = 21
+        Hint = 'Open file'
         Caption = '1'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -440,6 +407,8 @@ object Form1: TForm1
         Font.Name = 'Wingdings'
         Font.Style = []
         ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 2
         Visible = False
         OnClick = Button18Click
@@ -450,7 +419,7 @@ object Form1: TForm1
         Width = 305
         Height = 212
         BevelOuter = bvNone
-        TabOrder = 16
+        TabOrder = 15
         object Image2: TImage
           Left = 0
           Top = 1
@@ -461,19 +430,122 @@ object Form1: TForm1
         end
       end
       object Panel3: TPanel
-        Left = 583
+        Left = 592
         Top = 439
-        Width = 194
+        Width = 185
         Height = 122
         BevelOuter = bvNone
-        TabOrder = 17
+        TabOrder = 16
         object Image3: TImage
-          Left = 8
+          Left = 0
           Top = 0
-          Width = 177
-          Height = 108
+          Width = 185
+          Height = 122
           Stretch = True
           OnDblClick = ListBox3DblClick
+        end
+      end
+      object PageControl3: TPageControl
+        Left = 592
+        Top = 68
+        Width = 185
+        Height = 141
+        ActivePage = TabSheet6
+        TabOrder = 17
+        object TabSheet6: TTabSheet
+          Caption = 'Scene length'
+          ExplicitWidth = 281
+          ExplicitHeight = 165
+          object Label20: TLabel
+            Left = 16
+            Top = 15
+            Width = 119
+            Height = 13
+            Caption = 'Picture sequence length:'
+          end
+          object Label21: TLabel
+            Left = 16
+            Top = 34
+            Width = 37
+            Height = 13
+            Caption = 'Label21'
+          end
+          object Label22: TLabel
+            Left = 16
+            Top = 63
+            Width = 91
+            Height = 13
+            Caption = 'Soundtrack length:'
+          end
+          object Label23: TLabel
+            Left = 16
+            Top = 82
+            Width = 37
+            Height = 13
+            Caption = 'Label23'
+          end
+        end
+        object TabSheet7: TTabSheet
+          Caption = 'Stats'
+          ImageIndex = 1
+          ExplicitWidth = 281
+          ExplicitHeight = 165
+          object Label34: TLabel
+            Left = 16
+            Top = 16
+            Width = 61
+            Height = 13
+            Caption = 'SceneIndex:'
+          end
+          object Label35: TLabel
+            Left = 98
+            Top = 16
+            Width = 12
+            Height = 13
+            Caption = '---'
+          end
+          object Label32: TLabel
+            Left = 16
+            Top = 35
+            Width = 66
+            Height = 13
+            Caption = 'PictureCount:'
+          end
+          object Label33: TLabel
+            Left = 98
+            Top = 35
+            Width = 12
+            Height = 13
+            Caption = '---'
+          end
+          object Label30: TLabel
+            Left = 16
+            Top = 54
+            Width = 65
+            Height = 13
+            Caption = 'PictureIndex:'
+          end
+          object Label31: TLabel
+            Left = 98
+            Top = 54
+            Width = 12
+            Height = 13
+            Caption = '---'
+          end
+          object Label36: TLabel
+            Left = 16
+            Top = 73
+            Width = 63
+            Height = 13
+            Caption = 'ActionCount:'
+          end
+          object Label37: TLabel
+            Left = 98
+            Top = 73
+            Width = 12
+            Height = 13
+            Caption = '---'
+          end
         end
       end
     end
@@ -631,6 +703,7 @@ object Form1: TForm1
             Width = 145
             Height = 21
             Style = csDropDownList
+            ItemHeight = 13
             TabOrder = 0
             OnChange = ActionTargetChange
           end
@@ -665,6 +738,7 @@ object Form1: TForm1
             Width = 145
             Height = 21
             Style = csDropDownList
+            ItemHeight = 13
             TabOrder = 0
             OnChange = ActionTargetChange
           end
@@ -754,6 +828,7 @@ object Form1: TForm1
             Width = 145
             Height = 21
             Style = csDropDownList
+            ItemHeight = 13
             TabOrder = 0
             OnChange = ActionTargetChange
           end
@@ -830,6 +905,7 @@ object Form1: TForm1
         Top = 35
         Width = 30
         Height = 21
+        Hint = 'Open file'
         Caption = '1'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -837,6 +913,8 @@ object Form1: TForm1
         Font.Name = 'Wingdings'
         Font.Style = []
         ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 1
         Visible = False
         OnClick = Button11Click
@@ -872,6 +950,15 @@ object Form1: TForm1
     Caption = 'New'
     TabOrder = 5
     OnClick = Button14Click
+  end
+  object Button19: TButton
+    Left = 136
+    Top = 534
+    Width = 81
+    Height = 25
+    Caption = 'Undo all'
+    TabOrder = 6
+    OnClick = Button19Click
   end
   object Timer1: TTimer
     Enabled = False

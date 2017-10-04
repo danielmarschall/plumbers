@@ -54,12 +54,15 @@ type
     unknown2: array[0..1] of Word;
     scenes: array[0..99] of TSceneDef;        // Scenes start at 0x0016
     pictures: array[0..1999] of TPictureDef;  // Pictures start at 0x2596
+
     function AddSceneAtEnd(SceneID: integer): PSceneDef;
     procedure DeleteScene(SceneIndex: integer);
     procedure SwapScene(IndexA, IndexB: integer);
     procedure DeletePicture(PictureIndex: integer);
     procedure SwapPicture(IndexA, IndexB: integer);
-    function AddPictureBetween(Index: integer): PPictureDef;
+    function AddPictureBetween(Index: integer; assignToUpperScene: boolean=true): PPictureDef;
+    function RealPictureCount: integer;
+    function RealActionCount: integer;
   end;
 
 procedure _WriteStringToFilename(x: PAnsiFileName; s: AnsiString);
@@ -93,6 +96,29 @@ begin
     CopyMemory(@Self.scenes[SceneIndex], @Self.scenes[SceneIndex+1], (Length(Self.scenes)-SceneIndex-1)*SizeOf(TSceneDef));
   end;
   ZeroMemory(@Self.scenes[Length(Self.scenes)-1], SizeOf(TSceneDef));
+  Dec(Self.numScenes);
+end;
+
+function TGameBinFile.RealActionCount: integer;
+var
+  iScene: integer;
+begin
+  result := 0;
+  for iScene := 0 to Self.numScenes - 1 do
+  begin
+    result := result + Self.scenes[iScene].numActions;
+  end;
+end;
+
+function TGameBinFile.RealPictureCount: integer;
+var
+  iScene: integer;
+begin
+  result := 0;
+  for iScene := 0 to Self.numScenes - 1 do
+  begin
+    result := result + Self.scenes[iScene].numPics;
+  end;
 end;
 
 procedure TGameBinFile.SwapScene(IndexA, IndexB: integer);
@@ -108,28 +134,43 @@ end;
 
 procedure TGameBinFile.DeletePicture(PictureIndex: integer);
 var
-  iScene: integer;
+  iScene, iScene2: integer;
+  protection: integer; // prevents that two scenes get the same picture index when all pictures in a scene are deleted
 begin
   if (PictureIndex < 0) or (PictureIndex >= Length(Self.pictures)) then raise Exception.Create('Invalid picture index');
 
+  protection := 0;
   for iScene := 0 to Self.numScenes-1 do
   begin
     if (PictureIndex >= Self.scenes[iScene].pictureIndex) and
        (PictureIndex <= Self.scenes[iScene].pictureIndex + Self.scenes[iScene].numPics - 1) then
     begin
       Dec(Self.scenes[iScene].numPics);
+      if Self.scenes[iScene].numPics = 0 then
+      begin
+         for iScene2 := 0 to Self.numScenes-1 do
+         begin
+           if Self.scenes[iScene2].pictureIndex = PictureIndex+1 then
+           begin
+             protection := 1;
+             break;
+           end;
+         end;
+      end;
     end
-    else if (PictureIndex < Self.scenes[iScene].pictureIndex) then
+    else if (PictureIndex+protection < Self.scenes[iScene].pictureIndex) then
     begin
       Dec(Self.scenes[iScene].pictureIndex);
     end;
   end;
 
-  If PictureIndex < Length(Self.pictures)-1 then
+  If (PictureIndex+protection < Length(Self.pictures)-1) and (protection = 0) then
   begin
-    CopyMemory(@Self.pictures[PictureIndex], @Self.pictures[PictureIndex+1], (Length(Self.pictures)-PictureIndex-1)*SizeOf(TPictureDef));
+    CopyMemory(@Self.pictures[PictureIndex+protection], @Self.pictures[PictureIndex+protection+1], (Length(Self.pictures)-PictureIndex+protection-1)*SizeOf(TPictureDef));
   end;
   ZeroMemory(@Self.pictures[Length(Self.pictures)-1], SizeOf(TPictureDef));
+
+  Dec(Self.numPics);
 end;
 
 procedure TGameBinFile.SwapPicture(IndexA, IndexB: integer);
@@ -146,29 +187,75 @@ begin
   CopyMemory(@Self.pictures[IndexB], @bakPicture, SizeOf(TPictureDef));
 end;
 
-function TGameBinFile.AddPictureBetween(Index: integer): PPictureDef;
+function TGameBinFile.AddPictureBetween(Index: integer; assignToUpperScene: boolean=true): PPictureDef;
+
+  function _HasBuffer(Index: integer): boolean;
+  var
+    iScene: integer;
+  begin
+    for iScene := 0 to Self.numScenes-1 do
+    begin
+      if Self.scenes[iScene].pictureIndex = Index+1 then
+      begin
+        result := true;
+        exit;
+      end;
+    end;
+    result := false;
+  end;
+
 var
   iScene: integer;
 begin
   if Self.numPics >= Length(Self.pictures) then raise Exception.Create('No more space for another picture');
   if ((Index < 0) or (Index >= Length(Self.pictures))) then raise Exception.Create('Invalid picture index');
 
-  for iScene := 0 to Self.numScenes-1 do
+  if assignToUpperScene then
   begin
-    if (Index >= Self.scenes[iScene].pictureIndex) and
-       (index <= Self.scenes[iScene].pictureIndex + Max(0,Self.scenes[iScene].numPics - 1)) then
+    // Sc1   Sc2       Sc1   Sc2
+    // A B | C    ==>  A B | X C
+    //       ^
+    for iScene := 0 to Self.numScenes-1 do
     begin
-      Inc(Self.scenes[iScene].numPics);
-    end
-    else if (index < Self.scenes[iScene].pictureIndex) then
+      if (Index >= Self.scenes[iScene].pictureIndex) and
+         (index <= Self.scenes[iScene].pictureIndex + Max(0,Self.scenes[iScene].numPics - 1)) then
+      begin
+        Inc(Self.scenes[iScene].numPics);
+      end
+      else if (index < Self.scenes[iScene].pictureIndex) and not _HasBuffer(index) then
+      begin
+        Inc(Self.scenes[iScene].pictureIndex);
+      end;
+    end;
+  end
+  else
+  begin
+    // Sc1   Sc2       Sc1     Sc2
+    // A B | C    ==>  A B X | C
+    //       ^
+    for iScene := 0 to Self.numScenes-1 do
     begin
-      Inc(Self.scenes[iScene].pictureIndex);
+      if (Index >= 1 + Self.scenes[iScene].pictureIndex) and
+         (index <= 1 + Self.scenes[iScene].pictureIndex + Max(0,Self.scenes[iScene].numPics-1)) then
+      begin
+        Inc(Self.scenes[iScene].numPics);
+      end
+      else if (index <= Self.scenes[iScene].pictureIndex) and not _HasBuffer(index) then
+      begin
+        Inc(Self.scenes[iScene].pictureIndex);
+      end;
     end;
   end;
 
   result := @Self.pictures[Index];
-  CopyMemory(@Self.pictures[Index+1], result, (Length(Self.pictures)-Index-1)*SizeOf(TPictureDef));
+  if not _HasBuffer(index) then
+  begin
+    CopyMemory(@Self.pictures[Index+1], result, (Length(Self.pictures)-Index-1)*SizeOf(TPictureDef));
+  end;
+    
   ZeroMemory(result, SizeOf(TPictureDef));
+
+  Inc(Self.numPics);
 end;
 
 end.
