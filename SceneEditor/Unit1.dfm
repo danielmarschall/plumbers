@@ -309,7 +309,9 @@ object Form1: TForm1
         Height = 25
         ColoredButtons = []
         VisibleButtons = [btPlay]
+        DoubleBuffered = True
         Visible = False
+        ParentDoubleBuffered = False
         TabOrder = 14
       end
       object GroupBox2: TGroupBox
@@ -450,7 +452,7 @@ object Form1: TForm1
         Top = 68
         Width = 185
         Height = 141
-        ActivePage = TabSheet6
+        ActivePage = TabSheet7
         TabOrder = 17
         object TabSheet6: TTabSheet
           Caption = 'Scene length'
@@ -494,7 +496,7 @@ object Form1: TForm1
             Caption = 'SceneIndex:'
           end
           object Label35: TLabel
-            Left = 98
+            Left = 90
             Top = 16
             Width = 12
             Height = 13
@@ -508,7 +510,7 @@ object Form1: TForm1
             Caption = 'PictureCount:'
           end
           object Label33: TLabel
-            Left = 98
+            Left = 90
             Top = 35
             Width = 12
             Height = 13
@@ -522,7 +524,7 @@ object Form1: TForm1
             Caption = 'PictureIndex:'
           end
           object Label31: TLabel
-            Left = 98
+            Left = 90
             Top = 54
             Width = 12
             Height = 13
@@ -536,7 +538,7 @@ object Form1: TForm1
             Caption = 'ActionCount:'
           end
           object Label37: TLabel
-            Left = 98
+            Left = 90
             Top = 73
             Width = 12
             Height = 13
@@ -715,7 +717,6 @@ object Form1: TForm1
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
             TabOrder = 0
             OnChange = ActionTargetChange
           end
@@ -750,7 +751,6 @@ object Form1: TForm1
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
             TabOrder = 0
             OnChange = ActionTargetChange
           end
@@ -840,7 +840,6 @@ object Form1: TForm1
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
             TabOrder = 0
             OnChange = ActionTargetChange
           end

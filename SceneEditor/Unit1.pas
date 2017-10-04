@@ -204,7 +204,6 @@ type
     procedure Load;
     procedure Save;
     procedure ReloadActionSceneLists;
-    function FindSceneIndex(sceneID: integer): integer;
     function GetGreatestSceneID: integer;
     function SearchSceneIDGapFromTop: integer;
     procedure RedrawDecisionBitmap;
@@ -239,12 +238,14 @@ const
   DEFAULT_FILENAME = 'DUMMY.BMP';
 
 function GetSceneIDFromName(sceneName: string): Integer;
+resourcestring
+  S_SCENENAME_INVALID = 'Scene name invalid';
 var
   sSceneID: string;
 begin
-  if Copy(sceneName, 1, 2) <> 'SC' then raise Exception.Create('Scene name invalid');
+  if Copy(sceneName, 1, 2) <> 'SC' then raise Exception.Create(S_SCENENAME_INVALID);
   sSceneID := Copy(sceneName, 3, 2);
-  if not TryStrToInt(sSceneID, result) then raise Exception.Create('Scene name invalid');
+  if not TryStrToInt(sSceneID, result) then raise Exception.Create(S_SCENENAME_INVALID);
 end;
 
 procedure SelectFilenameBase(Edit: TEdit);
@@ -334,11 +335,12 @@ begin
   Label29.Visible := false;
 end;
 
-procedure TForm1.Image1MouseMove(Sender: TObject; Shift: TShiftState; X,
-  Y: Integer);
+procedure TForm1.Image1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+resourcestring
+  S_COORDS = 'Coords: [%d, %d]';
 begin
-  label10.Caption := Format('Coords: [%d, %d]', [Round(Image1.Picture.Width*(X/Image1.Width)),
-                                                 Round(Image1.Picture.Height*(Y/Image1.Height))]);
+  label10.Caption := Format(S_COORDS, [Round(Image1.Picture.Width*(X/Image1.Width)),
+                                       Round(Image1.Picture.Height*(Y/Image1.Height))]);
 end;
 
 function TForm1.SearchSceneIDGapFromTop: integer;
@@ -357,9 +359,11 @@ begin
 end;
 
 procedure TForm1.Button10Click(Sender: TObject);
+resourcestring
+  S_NOTFOUND = 'GAME.BIN saved; ShowTime32.exe not found.';
 begin
   Save;
-  if not FileExists('ShowTime32.exe') then raise Exception.Create('GAME.BIN saved; ShowTime32.exe not found.');
+  if not FileExists('ShowTime32.exe') then raise Exception.Create(S_NOTFOUND);
   ShellExecute(Application.Handle, 'open', 'ShowTime32.exe', '', '', SW_NORMAL);
 end;
 
@@ -615,8 +619,10 @@ begin
 end;
 
 procedure TForm1.Button19Click(Sender: TObject);
+resourcestring
+  S_DISCARD = 'Are you sure you want to discard all changes?';
 begin
-  if MessageDlg('Are you sure you want to discard all changes?', mtConfirmation, mbYesNoCancel, 0) = mrYes then
+  if MessageDlg(S_DISCARD, mtConfirmation, mbYesNoCancel, 0) = mrYes then
   begin
     CopyMemory(@Game, @GameBak, SizeOf(Game));
     SetupGUIAfterLoad;
@@ -624,13 +630,15 @@ begin
 end;
 
 procedure TForm1.NewScene;
+resourcestring
+  S_SCENE_FULL = 'No more space for another scene';
 var
   sceneID: integer;
   newScene: PSceneDef;
 begin
   if ListBox1.Items.Count = 100 then
   begin
-    raise Exception.Create('No more space for another scene');
+    raise Exception.Create(S_SCENE_FULL);
   end;
 
   sceneID := GetGreatestSceneID+1;
@@ -658,6 +666,12 @@ begin
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
+resourcestring
+  S_CONFLICT = 'Can''t delete this scene. There are following dependencies:'+#13#10#13#10+'%s';
+  S_SCENEID = 'Scene %s, action #%d';
+  // S_ONLYONE = 'Can''t delete the scene if there is only one.';
+  S_REALLY_DEL = 'Do you really want to delete scene %s?';
+  S_NEW_INTRO = 'Attention: This will make %s to your new intro sequence. Is that OK?';
 var
   iScene, iAction, sceneID: integer;
   conflicts: TStringList;
@@ -669,7 +683,7 @@ begin
   (*
   if ListBox1.Count = 1 then
   begin
-    raise Exception.Create('Can''t delete the scene if there is only one.');
+    raise Exception.Create(S_ONLYONE);
   end;
   *)
 
@@ -682,21 +696,21 @@ begin
       begin
         if Game.scenes[iScene].actions[iAction].nextSceneID = sceneID then
         begin
-          conflicts.Add(Format('Scene %s, action #%d', [Game.scenes[iScene].szSceneFolder, iAction+1]));
+          conflicts.Add(Format(S_SCENEID, [Game.scenes[iScene].szSceneFolder, iAction+1]));
         end;
       end;
     end;
     if conflicts.Count > 0 then
     begin
-      raise Exception.Create('Can''t delete this scene. There are following dependencies:'+#13#10#13#10+conflicts.Text);
+      raise Exception.CreateFmt(S_CONFLICT, [conflicts.Text]);
     end;
   finally
     FreeAndNil(conflicts);
   end;
 
-  sWarning := Format('Do you really want to delete scene %s?', [CurScene^.szSceneFolder]);
+  sWarning := Format(S_REALLY_DEL, [CurScene^.szSceneFolder]);
   if (ListBox1.ItemIndex = 0) and (ListBox1.Count >= 2) then
-    sWarning := Format('Attention: This will make %s to your new intro sequence. Is that OK?', [ListBox1.Items[ListBox1.ItemIndex+1]]);
+    sWarning := Format(S_NEW_INTRO, [ListBox1.Items[ListBox1.ItemIndex+1]]);
   if (MessageDlg(sWarning, mtConfirmation, mbYesNoCancel, 0) <> mrYes) then
   begin
     Exit;
@@ -811,6 +825,8 @@ begin
 end;
 
 procedure TForm1.ActionTargetChange(Sender: TObject);
+resourcestring
+  S_ASSERT_SENDER = 'Unexpected sender for ActionTargetChange()';
 var
   actionIdx: integer;
   itemIdx: Integer;
@@ -818,7 +834,7 @@ begin
        if Sender = ComboBox1 then actionIdx := 0
   else if Sender = ComboBox2 then actionIdx := 1
   else if Sender = ComboBox3 then actionIdx := 2
-  else raise Exception.Create('Unexpected sender for ActionTargetChange()');
+  else raise Exception.Create(S_ASSERT_SENDER);
 
   itemIdx := TComboBox(Sender).ItemIndex;
   if itemIdx = 0 then
@@ -871,10 +887,12 @@ begin
 end;
 
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+resourcestring
+  S_SAVE_CHANGES = 'Do you want to save the changes?';
 begin
   if not CompareMem(@Game, @GameBak, SizeOf(Game)) then
   begin
-    case MessageDlg('Do you want to save the changes?', mtConfirmation, mbYesNoCancel, 0) of
+    case MessageDlg(S_SAVE_CHANGES, mtConfirmation, mbYesNoCancel, 0) of
       mrYes:
       begin
         Save;
@@ -911,9 +929,12 @@ begin
 end;
 
 function TForm1.CurScene: PSceneDef;
+resourcestring
+  S_NO_SCENE_AVAILABLE = 'No scenes available. Please create one.';
+  S_NO_SCENE_SELECTED = 'No scene selected. Please select one.';
 begin
-  if ListBox1.Count = 0 then raise Exception.Create('No scene available. Please create one.');
-  if ListBox1.ItemIndex = -1 then raise Exception.Create('No scene selected. Please select one.');
+  if ListBox1.Count = 0 then raise Exception.Create(S_NO_SCENE_AVAILABLE);
+  if ListBox1.ItemIndex = -1 then raise Exception.Create(S_NO_SCENE_SELECTED);
   result := @Game.scenes[ListBox1.ItemIndex];
 end;
 
@@ -938,9 +959,12 @@ begin
 end;
 
 function TForm1.CurPicture: PPictureDef;
+resourcestring
+  S_NO_PICTURE_AVAILABLE = 'No pictures available. Please create one.';
+  S_NO_PICTURE_SELECTED = 'No picture selected. Please select one.';
 begin
-  if ListBox2.Count = 0 then raise Exception.Create('No pictures available. Please create one.');
-  if ListBox2.ItemIndex = -1 then raise Exception.Create('No pictures selected. Please select one.');
+  if ListBox2.Count = 0 then raise Exception.Create(S_NO_PICTURE_AVAILABLE);
+  if ListBox2.ItemIndex = -1 then raise Exception.Create(S_NO_PICTURE_SELECTED);
   result := @Game.pictures[CurScene^.pictureIndex + ListBox2.ItemIndex]
 end;
 
@@ -1103,6 +1127,8 @@ begin
 end;
 
 procedure TForm1.Load;
+resourcestring
+  S_CORRECTED_PICTURE_COUNT = 'Picture count was wrong. Value was corrected.';
 var
   fs: TFileStream;
 begin
@@ -1117,28 +1143,11 @@ begin
 
   if Game.RealPictureCount <> Game.numPics then
   begin
-    MessageDlg('Picture count was wrong. Value was corrected.', mtInformation, [mbOk], 0);
+    MessageDlg(S_CORRECTED_PICTURE_COUNT, mtInformation, [mbOk], 0);
     Game.numPics := Game.RealPictureCount;
   end;
 
   SetupGUIAfterLoad;
-end;
-
-function TForm1.FindSceneIndex(sceneID: integer): integer;
-var
-  i: Integer;
-  sSceneID: string;
-begin
-  sSceneID := Format('SC%.2d', [sceneID]);
-  for i := 0 to ListBox1.Count - 1 do
-  begin
-    if ListBox1.Items.Strings[i] = sSceneID then
-    begin
-      result := i;
-      exit;
-    end;
-  end;
-  result := -1;
 end;
 
 procedure TForm1.RecalcSlideshowLength;
@@ -1203,13 +1212,15 @@ end;
 procedure TForm1.RecalcSoundtrackLength;
 var
   FileName: string;
+resourcestring
+  S_NA = 'n/a';
 begin
   if MediaPlayer1.Mode = mpPlaying then exit;
 
   FileName := IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + CurScene^.szDialogWav;
   if not FileExists(FileName) then
   begin
-    Label23.Caption := 'n/a';
+    Label23.Caption := S_NA;
     exit;
   end;
   MediaPlayer1.FileName := FileName;
@@ -1231,7 +1242,7 @@ procedure TForm1.LoadScene;
       ComboBox.ItemIndex := 1
     else
     begin
-      idx := FindSceneIndex(sceneID);
+      idx := Game.FindSceneIndex(sceneID);
       if idx = -1 then
         ComboBox.ItemIndex := -1
       else
@@ -1321,6 +1332,9 @@ end;
 procedure TForm1.ReloadActionSceneLists;
 
   procedure _ReloadActionSceneLists(ComboBox: TComboBox);
+  resourcestring
+    S_TERMINATE = 'Terminate program';
+    S_PREV_DEC = 'Previous decision';
   var
     prevSelection: string;
     i: Integer;
@@ -1328,8 +1342,8 @@ procedure TForm1.ReloadActionSceneLists;
     prevSelection := ComboBox.Text;
     try
       ComboBox.Items.Clear;
-      ComboBox.Items.Add('Terminate program');
-      ComboBox.Items.Add('Previous decision');
+      ComboBox.Items.Add(S_TERMINATE);
+      ComboBox.Items.Add(S_PREV_DEC);
       ComboBox.Items.AddStrings(ListBox1.Items);
     finally
       ComboBox.ItemIndex := 0;

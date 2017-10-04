@@ -92,7 +92,7 @@ begin
   Temp := '';
   for I := 1 to L2 do
   begin
-    Temp := ThousandSeparator + Copy (S, LS - 3 * I + 1, 3) + Temp;
+    Temp := {$IF not Declared(ThousandSeparator)}FormatSettings.{$IFEND}ThousandSeparator + Copy (S, LS - 3 * I + 1, 3) + Temp;
   end;
   Result := Copy (S, N, (LS - 1) mod 3 + 1) + Temp;
   if N > 1 then Result := '-' + Result;
@@ -101,6 +101,8 @@ end;
 { TMainForm }
 
 procedure TMainForm.cbPictureShow(ASender: TGame; AFilename: string; AType: TPictureType);
+resourcestring
+  S_YOUR_SCORE = 'Your score is: %s';
 begin
   if FileExists(AFilename) then
   begin
@@ -146,7 +148,7 @@ begin
     End;
   end;
 
-  Panel1.Caption := Format('Your score is: %s', [AddThouSeps(IntToStr(ASender.Score))]);
+  Panel1.Caption := Format(S_YOUR_SCORE, [AddThouSeps(IntToStr(ASender.Score))]);
   Panel1.Left := 8;
   Panel1.Top := Min(ClientHeight, Screen.Height) - Panel1.Height - 8;
   Panel1.Visible := AType = ptDecision;

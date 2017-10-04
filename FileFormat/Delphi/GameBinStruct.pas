@@ -8,6 +8,9 @@ const
   SCENEID_PREVDECISION = -1;
   SCENEID_ENDGAME      = 32767;
 
+  SEGMENT_BEGINNING = 0;
+  SEGMENT_DECISION  = 1;
+
 type
   PCoord = ^TCoord;
   TCoord = packed record
@@ -18,7 +21,8 @@ type
   PActionDef = ^TActionDef;
   TActionDef = packed record
     scoreDelta: Integer;
-    nextSceneID: SmallInt;  // will jump to the scene with the name "SC<nextSceneID>"
+    nextSceneID: SmallInt;  // will jump to the scene with the name "SCxx",
+                            // where xx stands for nextSceneID (2 digits at least)
                             // 7FFF (32767) = end game
                             // FFFF (   -1) = go back to the last decision
     sceneSegment: SmallInt; // 0 = scene from beginning, 1 = decision page
@@ -59,6 +63,8 @@ type
     class function MaxPictureCount: integer; static;
 
     function AddSceneAtEnd(SceneID: integer): PSceneDef;
+    function FindScene(SceneID: integer): PSceneDef;
+    function FindSceneIndex(SceneID: integer): integer;
     procedure DeleteScene(SceneIndex: integer);
     procedure SwapScene(IndexA, IndexB: integer);
     procedure DeletePicture(PictureIndex: integer);
@@ -83,6 +89,8 @@ begin
   StrPLCopy(x^, s, Length(x^));
 end;
 
+{ TGameBinFile }
+
 function TGameBinFile.BiggestUsedPictureIndex: integer;
 var
   iScene, candidate: integer;
@@ -95,20 +103,55 @@ begin
   end;
 end;
 
+resourcestring
+  S_INVALID_SCENE_ID = 'Invalid scene ID';
+
 function TGameBinFile.AddSceneAtEnd(SceneID: integer): PSceneDef;
+resourcestring
+  S_SCENE_FULL = 'Not enough space for another scene';
 begin
-  if Self.numScenes >= Length(Self.scenes) then raise Exception.Create('Not enough space for another scene');
-  if SceneID < 0 then raise Exception.Create('Invalid scene ID');
-  if sceneID >= Length(Self.scenes) then raise Exception.Create('SceneID is too large.'); // TODO: I think this is not correct. This is the scene *ID*
+  if Self.numScenes >= Length(Self.scenes) then raise Exception.Create(S_SCENE_FULL);
+  if SceneID = $7FFF {Terminate program} then raise Exception.Create(S_INVALID_SCENE_ID);
+  if SceneID = $FFFF {Previous decision} then raise Exception.Create(S_INVALID_SCENE_ID);
   result := @Self.scenes[Self.numScenes];
   ZeroMemory(result, SizeOf(TSceneDef));
   _WriteStringToFilename(@result.szSceneFolder, AnsiString(Format('SC%.2d', [sceneID])));
   Inc(Self.numScenes);
 end;
 
-procedure TGameBinFile.DeleteScene(SceneIndex: integer);
+function TGameBinFile.FindSceneIndex(SceneID: integer): integer;
+var
+  i: integer;
 begin
-  if ((SceneIndex < 0) or (SceneIndex >= Length(Self.scenes))) then raise Exception.Create('Invalid scene index');
+  if SceneID = $7FFF {Terminate program} then raise Exception.Create(S_INVALID_SCENE_ID);
+  if SceneID = $FFFF {Previous decision} then raise Exception.Create(S_INVALID_SCENE_ID);
+  for i := 0 to Self.numScenes - 1 do
+  begin
+    if Self.scenes[i].szSceneFolder = Format('SC%.2d', [SceneID]) then
+    begin
+      result := i;
+      exit;
+    end;
+  end;
+  result := -1;
+end;
+
+function TGameBinFile.FindScene(SceneID: integer): PSceneDef;
+var
+  idx: integer;
+begin
+  idx := FindSceneIndex(SceneID);
+  if idx >= 0 then
+    result := @Self.scenes[idx]
+  else
+    result := nil;
+end;
+
+procedure TGameBinFile.DeleteScene(SceneIndex: integer);
+resourcestring
+  S_INVALID_SC_IDX = 'Invalid scene index';
+begin
+  if ((SceneIndex < 0) or (SceneIndex >= Length(Self.scenes))) then raise Exception.Create(S_INVALID_SC_IDX);
   If SceneIndex < Length(Self.scenes)-1 then
   begin
     CopyMemory(@Self.scenes[SceneIndex], @Self.scenes[SceneIndex+1], (Length(Self.scenes)-SceneIndex-1)*SizeOf(TSceneDef));
@@ -277,16 +320,20 @@ function TGameBinFile.AddPictureBetween(Index: integer; assignToUpperScene: bool
     result := false;
   end;
 
+resourcestring
+  S_INVALID_PIC_IDX = 'Invalid picture index';
+  S_PIC_FULL_DEFRAG = 'Not enough space for another picture. Please defrag to fill the gaps first.';
+  S_PIC_FULL = 'Not enough space for another picture. Maximum limit reached.';
 var
   iScene: integer;
 begin
-  if ((Index < 0) or (Index >= Length(Self.pictures))) then raise Exception.Create('Invalid picture index');
+  if ((Index < 0) or (Index >= Length(Self.pictures))) then raise Exception.Create(S_INVALID_PIC_IDX);
 
   if (BiggestUsedPictureIndex = MaxPictureCount-1) and Defrag(true) then
-    raise Exception.Create('Not enough space for another picture. Please defrag to fill the gaps first.');
+    raise Exception.Create(S_PIC_FULL_DEFRAG);
 
   if Self.numPics >= MaxPictureCount then
-    raise Exception.Create('Not enough space for another picture. Maximum limit reached.');
+    raise Exception.Create(S_PIC_FULL);
 
   if assignToUpperScene then
   begin

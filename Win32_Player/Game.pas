@@ -41,7 +41,6 @@ type
     procedure PrevDecisionScene;
   protected
     GameData: TGameBinFile;
-    function FindScene(ASceneID: integer): PSceneDef;
     procedure Wait(AMilliseconds: integer);
     procedure PlayScene(scene: PSceneDef; goToDecision: boolean);
   public
@@ -83,21 +82,6 @@ begin
   end;
 end;
 
-function TGame.FindScene(ASceneID: integer): PSceneDef;
-var
-  i: integer;
-begin
-  for i := 0 to GameData.numScenes - 1 do
-  begin
-    if GameData.scenes[i].szSceneFolder = Format('SC%.2d', [ASceneID]) then
-    begin
-      result := @GameData.scenes[i];
-      exit;
-    end;
-  end;
-  result := nil;
-end;
-
 procedure TGame.TryExit;
 begin
   if Assigned(ExitCallback) then ExitCallback(Self);
@@ -119,9 +103,9 @@ begin
     TryExit
   else
   begin
-    nextScene := FindScene(action^.nextSceneID);
+    nextScene := GameData.FindScene(action^.nextSceneID);
     if Assigned(nextScene) then
-      PlayScene(nextScene, action^.sceneSegment=1)
+      PlayScene(nextScene, action^.sceneSegment=SEGMENT_DECISION)
     (*
     else
       raise Exception.CreateFmt('Scene %d was not found in GAME.BIN', [action^.nextSceneID]);
