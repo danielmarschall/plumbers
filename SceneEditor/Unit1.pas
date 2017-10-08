@@ -20,7 +20,7 @@ uses
   Menus;
 
 const
-  CUR_VER = '2017-10-04';
+  CUR_VER = '2017-10-08';
 
 type
   TForm1 = class(TForm)
@@ -1054,10 +1054,21 @@ var
 begin
   if ListBox3.ItemIndex = -1 then exit;
   fileName := IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + ListBox3.Items[ListBox3.ItemIndex];
-  Image3.Visible := FileExists(FileName);
-  if not FileExists(FileName) then exit;
-  Image3.Picture.LoadFromFile(Filename);
-  AspectRatio(Image3, Panel3);
+
+  if not FileExists(FileName) then
+  begin
+    Image3.Visible := false;
+    exit;
+  end;
+
+  try
+    Image3.Picture.LoadFromFile(Filename);
+    AspectRatio(Image3, Panel3);
+    Image3.Visible := true;
+  except
+    Image3.Visible := false;
+    // It could also be a sound file, so we do not show errors
+  end;
 end;
 
 procedure TForm1.ListBox3DblClick(Sender: TObject);
@@ -1168,20 +1179,18 @@ var
   i, idx: integer;
   SR: TSearchRec;
   ext: string;
+  sl: TStringList;
+  s: string;
 begin
-  ListBox3.Items.BeginUpdate;
+  sl := TStringList.Create;
   try
-    ListBox3.Clear;
-
-    Image3.Visible := false;
-
     if FindFirst(IncludeTrailingPathDelimiter(CurScene^.szSceneFolder) + '*.*', faArchive, SR) = 0 then
     begin
       repeat
         ext := UpperCase(ExtractFileExt(SR.Name));
         if ((ext <> '.PK' {Adobe Audition}) and (ext <> '.DB' {Windows Thumbnail})) then
         begin
-          ListBox3.Items.Add(SR.Name); //Fill the list
+          sl.Add(SR.Name); //Fill the list
         end;
       until FindNext(SR) <> 0;
       FindClose(SR);
@@ -1190,22 +1199,37 @@ begin
     // Remove the entries which are present
     for i := CurScene^.pictureIndex to CurScene^.pictureIndex+CurScene^.numPics-1 do
     begin
-      idx := ListBox3.Items.IndexOf(Game.pictures[i].szBitmapFile);
-      if idx <> -1 then ListBox3.Items.Delete(idx);
+      idx := sl.IndexOf(Game.pictures[i].szBitmapFile);
+      if idx <> -1 then sl.Delete(idx);
     end;
 
-    idx := ListBox3.Items.IndexOf(Edit1.Text);
-    if idx <> -1 then ListBox3.Items.Delete(idx);
-    idx := ListBox3.Items.IndexOf('E'+Edit1.Text);
-    if idx <> -1 then ListBox3.Items.Delete(idx);
+    idx := sl.IndexOf(Edit1.Text);
+    if idx <> -1 then sl.Delete(idx);
+    idx := sl.IndexOf('E'+Edit1.Text);
+    if idx <> -1 then sl.Delete(idx);
 
-    idx := ListBox3.Items.IndexOf(Edit2.Text);
-    if idx <> -1 then ListBox3.Items.Delete(idx);
+    idx := sl.IndexOf(Edit2.Text);
+    if idx <> -1 then sl.Delete(idx);
 
-    idx := ListBox3.Items.IndexOf(Edit3.Text);
-    if idx <> -1 then ListBox3.Items.Delete(idx);
+    idx := sl.IndexOf(Edit3.Text);
+    if idx <> -1 then sl.Delete(idx);
+
+    if sl.Text <> ListBox3.Items.Text then
+    begin
+      i := ListBox3.ItemIndex;
+      if i >= 0 then
+        s := ListBox3.Items.Strings[i]
+      else
+        s := '';
+      ListBox3.Items.Assign(sl);
+      i := ListBox3.Items.IndexOf(s);
+      if i >= 0 then
+        ListBox3.ItemIndex := i
+      else
+        Image3.Visible := false;
+    end;
   finally
-    ListBox3.Items.EndUpdate;
+    sl.Free;
   end;
 end;
 
