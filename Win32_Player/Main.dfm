@@ -3,8 +3,8 @@ object MainForm: TMainForm
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  ClientHeight = 72
-  ClientWidth = 255
+  ClientHeight = 107
+  ClientWidth = 280
   Color = clBlack
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -39,6 +39,28 @@ object MainForm: TMainForm
     TabOrder = 0
     Visible = False
     OnMouseUp = ControlClick
+  end
+  object MediaPlayer1: TMediaPlayer
+    Left = 167
+    Top = 47
+    Width = 57
+    Height = 30
+    VisibleButtons = [btPlay, btStop]
+    DoubleBuffered = True
+    Display = Panel2
+    FileName = 'D:\_test\INTRO.AVI'
+    Visible = False
+    ParentDoubleBuffered = False
+    TabOrder = 1
+  end
+  object Panel2: TPanel
+    Left = 24
+    Top = 63
+    Width = 137
+    Height = 18
+    Caption = 'Panel2'
+    TabOrder = 2
+    Visible = False
   end
   object StartupTimer: TTimer
     Enabled = False

@@ -22,13 +22,15 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, Game;
+  Dialogs, ExtCtrls, StdCtrls, Game, MPlayer;
 
 type
   TMainForm = class(TForm)
     Image1: TImage;
     Panel1: TPanel;
     StartupTimer: TTimer;
+    MediaPlayer1: TMediaPlayer;
+    Panel2: TPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure StartupTimerTimer(Sender: TObject);
@@ -213,13 +215,6 @@ begin
   end;
 
   try
-    Game := TGame.Create('.');
-    Game.PictureShowCallback := cbPictureShow;
-    Game.AsyncSoundCallback := cbAsyncSound;
-    Game.ExitCallback := cbExit;
-    Game.WaitCallback := cbWait;
-    Game.SetHotspotCallback := cbSetHotspot;
-    Game.ClearHotspotsCallback := cbClearHotspots;
     StartupTimer.Enabled := true;
   except
     Application.Terminate;
@@ -236,6 +231,10 @@ end;
 procedure TMainForm.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
+  if Key = VK_SPACE then
+  begin
+    if MediaPlayer1.Mode = mpPlaying then MediaPlayer1.Stop;
+  end;
   if Key = VK_ESCAPE then Close;
 end;
 
@@ -270,7 +269,69 @@ end;
 procedure TMainForm.StartupTimerTimer(Sender: TObject);
 begin
   StartupTimer.Enabled := false;
-  Game.Run;
+
+  if FileExists('INTRO.AVI') then
+  begin
+    MediaPlayer1.FileName := 'INTRO.AVI';
+    MediaPlayer1.Open;
+
+    Panel2.Visible := true;
+    Panel2.Top := 0;
+    Panel2.Left := 0;
+    Panel2.Width  := MediaPlayer1.DisplayRect.Right;
+    Panel2.Height := MediaPlayer1.DisplayRect.Bottom;
+
+    ClientWidth := Panel2.Width;
+    if (ClientWidth >= Screen.Width) then FullscreenMode := true;
+    ClientHeight := Panel2.Height;
+    if (ClientHeight >= Screen.Height) then FullscreenMode := true;
+    Position := poScreenCenter;
+
+    if FullScreenMode then
+    begin
+      BorderStyle := bsNone;
+      FormStyle := fsStayOnTop;
+      Screen.Cursor := -1;
+    end;
+
+    // For some reason, "Position := poScreenCenter" causes the video handle to break!
+    // we need to close+open it again!
+    MediaPlayer1.Close;
+    MediaPlayer1.Open;
+
+    MediaPlayer1.Play;
+    while MediaPlayer1.Mode <> mpStopped do
+    begin
+      Sleep(100);
+      Application.ProcessMessages;
+      if Application.Terminated then break;
+    end;
+
+    MediaPlayer1.Close;
+    Panel2.Visible := false;
+    Screen.Cursor := 0;
+  end;
+
+  try
+    Game := TGame.Create('.');
+    try
+      Game.PictureShowCallback := cbPictureShow;
+      Game.AsyncSoundCallback := cbAsyncSound;
+      Game.ExitCallback := cbExit;
+      Game.WaitCallback := cbWait;
+      Game.SetHotspotCallback := cbSetHotspot;
+      Game.ClearHotspotsCallback := cbClearHotspots;
+      Game.Run;
+    finally
+      FreeAndNil(Game);
+    end;
+  except
+    on E: Exception do
+    begin
+      MessageDlg(E.Message, mtError, [mbOK], 0);
+      Close;
+    end;
+  end;
 end;
 
 end.
