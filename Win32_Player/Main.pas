@@ -223,6 +223,8 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(Game);
+
   // Without this, some audio drivers could crash if you press ESC to end the game.
   // (VPC 2007 with Win95; cpsman.dll crashes sometimes)
   PlaySound(nil, hinstance, 0);
@@ -314,17 +316,13 @@ begin
 
   try
     Game := TGame.Create('.');
-    try
-      Game.PictureShowCallback := cbPictureShow;
-      Game.AsyncSoundCallback := cbAsyncSound;
-      Game.ExitCallback := cbExit;
-      Game.WaitCallback := cbWait;
-      Game.SetHotspotCallback := cbSetHotspot;
-      Game.ClearHotspotsCallback := cbClearHotspots;
-      Game.Run;
-    finally
-      FreeAndNil(Game);
-    end;
+    Game.PictureShowCallback := cbPictureShow;
+    Game.AsyncSoundCallback := cbAsyncSound;
+    Game.ExitCallback := cbExit;
+    Game.WaitCallback := cbWait;
+    Game.SetHotspotCallback := cbSetHotspot;
+    Game.ClearHotspotsCallback := cbClearHotspots;
+    Game.Run;
   except
     on E: Exception do
     begin

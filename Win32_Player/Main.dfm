@@ -41,16 +41,14 @@ object MainForm: TMainForm
     OnMouseUp = ControlClick
   end
   object MediaPlayer1: TMediaPlayer
-    Left = 167
-    Top = 47
+    Left = 191
+    Top = 51
     Width = 57
     Height = 30
     VisibleButtons = [btPlay, btStop]
-    DoubleBuffered = True
     Display = Panel2
     FileName = 'D:\_test\INTRO.AVI'
     Visible = False
-    ParentDoubleBuffered = False
     TabOrder = 1
   end
   object Panel2: TPanel
@@ -58,7 +56,8 @@ object MainForm: TMainForm
     Top = 63
     Width = 137
     Height = 18
-    Caption = 'Panel2'
+    BevelOuter = bvNone
+    ParentColor = True
     TabOrder = 2
     Visible = False
   end
