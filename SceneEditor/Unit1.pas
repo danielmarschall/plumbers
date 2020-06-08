@@ -20,7 +20,7 @@ uses
   Menus;
 
 const
-  CUR_VER = '2017-10-08';
+  CUR_VER = '2020-06-08';
 
 type
   TForm1 = class(TForm)
@@ -411,8 +411,13 @@ begin
 end;
 
 procedure TForm1.Button14Click(Sender: TObject);
+resourcestring
+  S_DISCARD = 'Are you sure you want to discard all changes and create a new game file?';
 begin
-  New;
+  if MessageDlg(S_DISCARD, mtConfirmation, mbYesNoCancel, 0) = mrYes then
+  begin
+    New;
+  end;
 end;
 
 procedure TForm1.DisableEnableSceneControls(enable: boolean);

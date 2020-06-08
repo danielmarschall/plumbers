@@ -44,8 +44,11 @@ object Form1: TForm1
     Top = 492
     Width = 33
     Height = 25
+    Hint = 'Add new scene'
     Anchors = [akLeft, akBottom]
     Caption = '+'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 3
     OnClick = Button1Click
   end
@@ -54,8 +57,11 @@ object Form1: TForm1
     Top = 492
     Width = 33
     Height = 25
+    Hint = 'Remove scene'
     Anchors = [akLeft, akBottom]
     Caption = '-'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 4
     OnClick = Button2Click
   end
@@ -64,8 +70,11 @@ object Form1: TForm1
     Top = 565
     Width = 105
     Height = 46
+    Hint = 'Save GAME.bin'
     Anchors = [akLeft, akBottom]
     Caption = 'Save'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 7
     OnClick = Button3Click
   end
@@ -74,8 +83,11 @@ object Form1: TForm1
     Top = 492
     Width = 33
     Height = 25
+    Hint = 'Move scene up'
     Anchors = [akLeft, akBottom]
     Caption = '^'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 1
     OnClick = Button4Click
   end
@@ -84,8 +96,11 @@ object Form1: TForm1
     Top = 492
     Width = 33
     Height = 25
+    Hint = 'Move scene down'
     Anchors = [akLeft, akBottom]
     Caption = 'v'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 2
     OnClick = Button5Click
   end
@@ -94,8 +109,11 @@ object Form1: TForm1
     Top = 565
     Width = 105
     Height = 46
+    Hint = 'Save GAME.BIN and run game'
     Anchors = [akLeft, akBottom]
     Caption = 'Save + Test'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 8
     OnClick = Button10Click
   end
@@ -309,9 +327,7 @@ object Form1: TForm1
         Height = 25
         ColoredButtons = []
         VisibleButtons = [btPlay]
-        DoubleBuffered = True
         Visible = False
-        ParentDoubleBuffered = False
         TabOrder = 14
       end
       object GroupBox2: TGroupBox
@@ -717,6 +733,7 @@ object Form1: TForm1
             Width = 145
             Height = 21
             Style = csDropDownList
+            ItemHeight = 13
             TabOrder = 0
             OnChange = ActionTargetChange
           end
@@ -751,6 +768,7 @@ object Form1: TForm1
             Width = 145
             Height = 21
             Style = csDropDownList
+            ItemHeight = 13
             TabOrder = 0
             OnChange = ActionTargetChange
           end
@@ -840,6 +858,7 @@ object Form1: TForm1
             Width = 145
             Height = 21
             Style = csDropDownList
+            ItemHeight = 13
             TabOrder = 0
             OnChange = ActionTargetChange
           end
@@ -967,8 +986,11 @@ object Form1: TForm1
     Top = 534
     Width = 75
     Height = 25
+    Hint = 'Create a new GAME.BIN'
     Anchors = [akLeft, akBottom]
     Caption = 'New'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 5
     OnClick = Button14Click
   end
@@ -977,6 +999,7 @@ object Form1: TForm1
     Top = 534
     Width = 98
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = 'Discard changes'
     TabOrder = 6
     OnClick = Button19Click
@@ -989,8 +1012,8 @@ object Form1: TForm1
     Top = 408
   end
   object MainMenu1: TMainMenu
-    Left = 963
-    Top = 496
+    Left = 19
+    Top = 8
     object File1: TMenuItem
       Caption = 'File'
       object Newfile1: TMenuItem
@@ -1012,7 +1035,7 @@ object Form1: TForm1
         Caption = '-'
       end
       object Close1: TMenuItem
-        Caption = 'Terminate program'
+        Caption = 'Close program'
         OnClick = Close1Click
       end
     end
