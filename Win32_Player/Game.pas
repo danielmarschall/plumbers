@@ -22,7 +22,7 @@ type
   TShowPictureCallback = procedure(Game: TGame; AFilename: string; AType: TPictureType) of object;
   TPlaySoundCallback = procedure(Game: TGame; AFilename: string) of object;
   TSimpleCallback = procedure(Game: TGame) of object;
-  TWaitCallback = procedure(Game: TGame; AMilliseconds: integer) of object;
+  TWaitCallback = function(Game: TGame; AMilliseconds: integer): boolean of object;
   TSetHotspotCallback = procedure(Game: TGame; AIndex: THotspotIndex; AHotspot: THotspot) of object;
   TClearHotspotsCallback = procedure(Game: TGame) of object;
   
@@ -41,7 +41,7 @@ type
     procedure PrevDecisionScene;
   protected
     GameData: TGameBinFile;
-    procedure Wait(AMilliseconds: integer);
+    function Wait(AMilliseconds: integer): boolean;
     procedure PlayScene(scene: PSceneDef; goToDecision: boolean);
   public
     procedure PerformAction(action: PActionDef);
@@ -113,12 +113,17 @@ begin
   end;
 end;
 
-procedure TGame.Wait(AMilliseconds: integer);
+function TGame.Wait(AMilliseconds: integer): boolean;
 begin
   if Assigned(WaitCallback) then
-    WaitCallback(Self, AMilliseconds)
+  begin
+    result := WaitCallback(Self, AMilliseconds)
+  end
   else
+  begin
     Sleep(AMilliseconds);
+    result := false; // don't cancel
+  end;
 end;
 
 procedure TGame.PlayScene(scene: PSceneDef; goToDecision: boolean);
@@ -144,7 +149,11 @@ begin
         PictureShowCallback(Self, IncludeTrailingPathDelimiter(FDirectory) +
           scene^.szSceneFolder + PathDelim + GameData.pictures[i].szBitmapFile, ptDia);
       end;
-      Wait(GameData.pictures[i].duration * 100);
+      if Wait(GameData.pictures[i].duration * 100) then
+      begin
+        AsyncSoundCallback(Self, '');
+        break;
+      end;
       if Application.Terminated then Abort;
     end;
   end;

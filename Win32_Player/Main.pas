@@ -22,7 +22,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, Game, MPlayer;
+  Dialogs, ExtCtrls, StdCtrls, Game, MPlayer, SyncObjs;
 
 type
   TMainForm = class(TForm)
@@ -42,10 +42,13 @@ type
     procedure cbPictureShow(ASender: TGame; AFilename: string; AType: TPictureType);
     procedure cbAsyncSound(ASender: TGame; AFilename: string);
     procedure cbExit(ASender: TGame);
-    procedure cbWait(ASender: TGame; AMilliseconds: integer);
+    function cbWait(ASender: TGame; AMilliseconds: integer): boolean;
     procedure cbSetHotspot(ASender: TGame; AIndex: THotspotIndex; AHotspot: THotspot);
     procedure cbClearHotspots(ASender: TGame);
     procedure ClickEvent(X, Y: Integer);
+  private
+    FCancelSceneRequest: boolean;
+    csCancelSceneRequest: TCriticalSection;
   public
     game: TGame;
   end;
@@ -58,19 +61,7 @@ implementation
 {$R *.dfm}
 
 uses
-  MMSystem, IniFiles, Math;
-
-procedure Delay(const Milliseconds: DWord);
-var
-  FirstTickCount: DWord;
-begin
-  FirstTickCount := GetTickCount; // TODO: Attention, GetTickCount can overflow
-  while not Application.Terminated and ((GetTickCount - FirstTickCount) < Milliseconds) do
-  begin
-    Application.ProcessMessages;
-    Sleep(0);
-  end;
-end;
+  MMSystem, IniFiles, Math, GameBinStruct;
 
 function AddThouSeps(const S: string): string;
 var 
@@ -106,6 +97,10 @@ procedure TMainForm.cbPictureShow(ASender: TGame; AFilename: string; AType: TPic
 resourcestring
   S_YOUR_SCORE = 'Your score is: %s';
 begin
+  {$IFDEF DEBUG}
+  Caption := AFileName;
+  {$ENDIF}
+
   if FileExists(AFilename) then
   begin
     Image1.Visible := false;
@@ -137,6 +132,7 @@ begin
   end
   else
   begin
+    ShowMessageFmt('File not found: %s', [AFileName]);
     Image1.Picture := nil;
   end;
 
@@ -185,11 +181,30 @@ begin
   Application.Terminate;
 end;
 
-procedure TMainForm.cbWait(ASender: TGame; AMilliseconds: integer);
+function TMainForm.cbWait(ASender: TGame; AMilliseconds: integer): boolean;
+var
+  FirstTickCount: DWord;
 begin
   //Cursor := crHourglass;
   try
-    Delay(AMilliseconds);
+    result := false; // don't cancel
+    FirstTickCount := GetTickCount; // TODO: Attention, GetTickCount can overflow
+    while not Application.Terminated and ((GetTickCount - FirstTickCount) < AMilliseconds) do
+    begin
+      csCancelSceneRequest.Acquire;
+      try
+        if FCancelSceneRequest then
+        begin
+          FCancelSceneRequest := false;
+          result := true; // cancel
+          exit;
+        end;
+      finally
+        csCancelSceneRequest.Release;
+      end;
+      Application.ProcessMessages;
+      Sleep(0);
+    end;
   finally
     //Cursor := crDefault;
   end;
@@ -200,6 +215,7 @@ var
   ini: TMemIniFile;
   iniFilename: string;
 begin
+  csCancelSceneRequest := TCriticalSection.Create;
   iniFilename := ChangeFileExt(ExtractFileName(ParamStr(0)), '.ini');
 
   DoubleBuffered := true;
@@ -228,6 +244,8 @@ begin
   // Without this, some audio drivers could crash if you press ESC to end the game.
   // (VPC 2007 with Win95; cpsman.dll crashes sometimes)
   PlaySound(nil, hinstance, 0);
+  FreeAndNil(csCancelSceneRequest);
+  if Assigned(Game) then FreeAndNil(Game);
 end;
 
 procedure TMainForm.FormKeyDown(Sender: TObject; var Key: Word;
@@ -237,13 +255,38 @@ begin
   begin
     if MediaPlayer1.Mode = mpPlaying then MediaPlayer1.Stop;
   end;
+  if KEY = VK_RETURN then
+  begin
+    if MediaPlayer1.Mode = mpPlaying then
+    begin
+      MediaPlayer1.Position := MediaPlayer1.EndPos;
+    end;
+    csCancelSceneRequest.Acquire;
+    try
+      FCancelSceneRequest := true;
+    finally
+      csCancelSceneRequest.Release;
+    end;
+  end;
   if Key = VK_ESCAPE then Close;
 end;
 
 procedure TMainForm.ClickEvent(X, Y: Integer);
 var
   i: integer;
+  ac: TActionDef;
 begin
+  // Debug: Go to prev decision by clicking on the top left edge
+  if (X < 20) and (Y < 20) then
+  begin
+    // TODO: Also allow to go back multiple steps
+    ac.scoreDelta := 0;
+    ac.nextSceneID := SCENEID_PREVDECISION;
+    ac.sceneSegment := 0;
+    Game.PerformAction(@ac);
+    Exit;
+  end;
+
   // If hotspots are overlaying, the lowest action will be chosen (same behavior as original game)
   for i := Low(FHotspots) to High(FHotspots) do
   begin
