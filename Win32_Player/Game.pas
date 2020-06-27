@@ -36,7 +36,8 @@ type
     FClearHotspotsCallback: TClearHotspotsCallback;
     FDirectory: string;
     FScore: integer;
-    CurDecisionScene, PrevDecisionScene: PSceneDef;
+    FCurDecisionScene: PSceneDef;
+    FPrevDecisionScene: PSceneDef;
     procedure TryExit;
     procedure PrevDecisionScene;
   protected
@@ -89,7 +90,7 @@ end;
 
 procedure TGame.PrevDecisionScene;
 begin
-  if Assigned(PrevDecisionScene) then PlayScene(PrevDecisionScene, true)
+  if Assigned(FPrevDecisionScene) then PlayScene(FPrevDecisionScene, true)
 end;
 
 procedure TGame.PerformAction(action: PActionDef);
@@ -151,6 +152,7 @@ begin
       end;
       if Wait(GameData.pictures[i].duration * 100) then
       begin
+        // Wait was cancelled by VK_RETURN
         AsyncSoundCallback(Self, '');
         break;
       end;
@@ -159,8 +161,8 @@ begin
   end;
   if scene^.szDecisionBmp <> '' then
   begin
-    PrevDecisionScene := CurDecisionScene;
-    CurDecisionScene := scene;
+    FPrevDecisionScene := FCurDecisionScene;
+    FCurDecisionScene := scene;
     if Assigned(PictureShowCallback) then
     begin
       PictureShowCallback(Self, IncludeTrailingPathDelimiter(FDirectory) +

@@ -48,7 +48,6 @@ object MainForm: TMainForm
     VisibleButtons = [btPlay, btStop]
     DoubleBuffered = True
     Display = Panel2
-    FileName = 'D:\_test\INTRO.AVI'
     Visible = False
     ParentDoubleBuffered = False
     TabOrder = 1

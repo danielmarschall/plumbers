@@ -246,13 +246,12 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
-  FreeAndNil(Game);
+  if Assigned(Game) then FreeAndNil(Game);
 
   // Without this, some audio drivers could crash if you press ESC to end the game.
   // (VPC 2007 with Win95; cpsman.dll crashes sometimes)
   PlaySound(nil, hinstance, 0);
   FreeAndNil(csCancelSceneRequest);
-  if Assigned(Game) then FreeAndNil(Game);
 end;
 
 procedure TMainForm.FormKeyDown(Sender: TObject; var Key: Word;
@@ -374,6 +373,10 @@ begin
     Game.ClearHotspotsCallback := cbClearHotspots;
     Game.Run;
   except
+    on E: EAbort do
+    begin
+      Close;
+    end;
     on E: Exception do
     begin
       MessageDlg(E.Message, mtError, [mbOK], 0);
