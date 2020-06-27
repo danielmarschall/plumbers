@@ -97,6 +97,13 @@ procedure TMainForm.cbPictureShow(ASender: TGame; AFilename: string; AType: TPic
 resourcestring
   S_YOUR_SCORE = 'Your score is: %s';
 begin
+  csCancelSceneRequest.Acquire;
+  try
+    FCancelSceneRequest := false;
+  finally
+    csCancelSceneRequest.Release;
+  end;
+
   {$IFDEF DEBUG}
   Caption := AFileName;
   {$ENDIF}
@@ -279,7 +286,7 @@ begin
   // Debug: Go to prev decision by clicking on the top left edge
   if (X < 20) and (Y < 20) then
   begin
-    // TODO: Also allow to go back multiple steps
+    // TODO: Also allow to go back multiple steps (we would need a stack instead of PrevDecisionScene/CurDecisionScene)
     ac.scoreDelta := 0;
     ac.nextSceneID := SCENEID_PREVDECISION;
     ac.sceneSegment := 0;

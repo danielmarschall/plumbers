@@ -36,7 +36,7 @@ type
     FClearHotspotsCallback: TClearHotspotsCallback;
     FDirectory: string;
     FScore: integer;
-    CurDecisionScene, LastDecisionScene: PSceneDef;
+    CurDecisionScene, PrevDecisionScene: PSceneDef;
     procedure TryExit;
     procedure PrevDecisionScene;
   protected
@@ -89,7 +89,7 @@ end;
 
 procedure TGame.PrevDecisionScene;
 begin
-  if Assigned(LastDecisionScene) then PlayScene(LastDecisionScene, true)
+  if Assigned(PrevDecisionScene) then PlayScene(PrevDecisionScene, true)
 end;
 
 procedure TGame.PerformAction(action: PActionDef);
@@ -159,7 +159,7 @@ begin
   end;
   if scene^.szDecisionBmp <> '' then
   begin
-    LastDecisionScene := CurDecisionScene;
+    PrevDecisionScene := CurDecisionScene;
     CurDecisionScene := scene;
     if Assigned(PictureShowCallback) then
     begin
