@@ -139,7 +139,7 @@ begin
   end
   else
   begin
-    ShowMessageFmt('File not found: %s', [AFileName]);
+    // ShowMessageFmt('File not found: %s', [AFileName]);
     Image1.Picture := nil;
   end;
 
