@@ -44,6 +44,7 @@ type
     GameData: TGameBinFile;
     function Wait(AMilliseconds: integer): boolean;
     procedure PlayScene(scene: PSceneDef; goToDecision: boolean);
+    function WavePrefix: string;
   public
     procedure PerformAction(action: PActionDef);
     property PictureShowCallback: TShowPictureCallback read FPictureShowCallback write FPictureShowCallback;
@@ -59,6 +60,18 @@ type
   end;
 
 implementation
+
+uses
+  MMSystem, Windows;
+
+function Supports16BitWaveout: boolean;
+var
+  caps: TWaveOutCaps;
+begin
+  ZeroMemory(@caps, sizeof(caps));
+  waveOutGetDevCaps(0, @caps, sizeof(caps));
+  result := caps.dwFormats and $CCCCCCCC <> 0; // Note: Original SHOWTIME.EXE only checked $0CCC
+end;
 
 { TGame }
 
@@ -127,6 +140,14 @@ begin
   end;
 end;
 
+function TGame.WavePrefix: string;
+begin
+  if Supports16BitWaveout then
+    result := ''
+  else
+    result := 'E';
+end;
+
 procedure TGame.PlayScene(scene: PSceneDef; goToDecision: boolean);
 var
   i: integer;
@@ -141,7 +162,7 @@ begin
     if Assigned(AsyncSoundCallback) then
     begin
       AsyncSoundCallback(Self, IncludeTrailingPathDelimiter(FDirectory) +
-        scene^.szSceneFolder + PathDelim + scene^.szDialogWav);
+        scene^.szSceneFolder + PathDelim + WavePrefix + scene^.szDialogWav);
     end;
     for i := scene^.pictureIndex to scene^.pictureIndex + scene^.numPics - 1 do
     begin
