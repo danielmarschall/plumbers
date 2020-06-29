@@ -42,7 +42,7 @@ type
     procedure cbPictureShow(ASender: TGame; AFilename: string; AType: TPictureType);
     procedure cbAsyncSound(ASender: TGame; AFilename: string);
     procedure cbExit(ASender: TGame);
-    function cbWait(ASender: TGame; AMilliseconds: integer): boolean;
+    function cbWait(ASender: TGame; AMilliseconds: Cardinal): boolean;
     procedure cbSetHotspot(ASender: TGame; AIndex: THotspotIndex; AHotspot: THotspot);
     procedure cbClearHotspots(ASender: TGame);
     procedure ClickEvent(X, Y: Integer);
@@ -188,7 +188,7 @@ begin
   Application.Terminate;
 end;
 
-function TMainForm.cbWait(ASender: TGame; AMilliseconds: integer): boolean;
+function TMainForm.cbWait(ASender: TGame; AMilliseconds: Cardinal): boolean;
 var
   FirstTickCount: DWord;
 begin

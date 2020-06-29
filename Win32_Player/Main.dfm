@@ -46,10 +46,8 @@ object MainForm: TMainForm
     Width = 57
     Height = 30
     VisibleButtons = [btPlay, btStop]
-    DoubleBuffered = True
     Display = Panel2
     Visible = False
-    ParentDoubleBuffered = False
     TabOrder = 1
   end
   object Panel2: TPanel

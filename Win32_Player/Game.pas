@@ -22,7 +22,7 @@ type
   TShowPictureCallback = procedure(Game: TGame; AFilename: string; AType: TPictureType) of object;
   TPlaySoundCallback = procedure(Game: TGame; AFilename: string) of object;
   TSimpleCallback = procedure(Game: TGame) of object;
-  TWaitCallback = function(Game: TGame; AMilliseconds: integer): boolean of object;
+  TWaitCallback = function(Game: TGame; AMilliseconds: Cardinal): boolean of object;
   TSetHotspotCallback = procedure(Game: TGame; AIndex: THotspotIndex; AHotspot: THotspot) of object;
   TClearHotspotsCallback = procedure(Game: TGame) of object;
   
