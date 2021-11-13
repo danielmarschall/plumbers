@@ -1,3 +1,20 @@
+/*
+ * Plumbers Don't Wear Ties - Structure of GAME.BIN
+ * Copyright 2017 - 2020 Daniel Marschall, ViaThinkSoft
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef PLUMBERS_GAMESTRUCT_HEADER
 #define PLUMBERS_GAMESTRUCT_HEADER
 
@@ -19,11 +36,12 @@ struct _coord {
 struct _actionDef {
 	int32_t     scoreDelta;
 	int16_t     nextSceneID;       // will jump to the scene with the name "SCxx", where xx stands for nextSceneID (2 digits at least)
-	                               // 7FFF (32767) = end game
-	                               // FFFF (   -1) = go back to the last decision
-	int16_t     sceneSegment;      // 0 = scene from beginning, 1 = decision page
+	                               // SCENEID_PREVDECISION (0x7FFF) = end game
+	                               // SCENEID_ENDGAME (0xFFFF)      = go back to the last decision
+	int16_t     sceneSegment;      // SEGMENT_BEGINNING (0) = start scene from beginning
+	                               // SEGMENT_DECISION (1)  = go to decision page
 	_coord      cHotspotTopLeft;
-	_coord      cHotspotBottomRigh;
+	_coord      cHotspotBottomRight;
 };
 
 struct _sceneDef {
