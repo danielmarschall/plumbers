@@ -10,6 +10,8 @@ https://misc.daniel-marschall.de/spiele/plumbers/
 
 [Download](http://www.viathinksoft.de/download.php?id=196)  the 32-bit engine for the PC version of the game. It is compatible with all Windows Operating Systems beginning with Windows 95. It runs in windowed mode and is able to play an intro movie.
 
+The PC version (required game contents) can of the game be downloaded at [archive.org](https://archive.org/details/PLUMBER_201703).
+
 If you wish to have the intro movie from the 3DO version, download the  [official intro video](https://misc.daniel-marschall.de/spiele/plumbers/extras/INTRO.zip)  and place the INTRO.AVI file in the main directory. This feature is only available in the 32 bit engine.
 
 ![](https://misc.daniel-marschall.de/spiele/plumbers/showtime32.png)
@@ -20,7 +22,7 @@ If you wish to have the intro movie from the 3DO version, download the  [officia
 
 To use the editor, download all CD contents onto your harddisk, remove the write-protection from the files and place BinEdit.exe in the root directory (where GAME.BIN is located). You should make a backup of GAME.BIN before running the editor.
 
-The source code in Delphi can be found  [here](https://svn.viathinksoft.com/cgi-bin/viewvc.cgi/plumbers/trunk/SceneEditor/).
+The source code in Delphi can be found  [here](https://github.com/danielmarschall/plumbers/tree/master/SceneEditor).
 
 ![](https://misc.daniel-marschall.de/spiele/plumbers/editor1.png)  
   
